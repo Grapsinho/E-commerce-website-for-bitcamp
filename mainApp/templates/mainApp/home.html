@@ -1,0 +1,187 @@
+{% extends 'mainApp/main.html' %} {% load static %} {% block css %}
+<style>
+  .product {
+    margin: 20px;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    max-width: 300px;
+    transition: transform 0.3s ease-in-out;
+  }
+
+  .product:hover {
+    transform: translateY(-5px);
+  }
+
+  .product img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+  }
+
+  .product-info {
+    padding: 20px;
+  }
+
+  .product-info h2 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-size: 1.2rem;
+  }
+
+  .product-info p.price {
+    margin: 0;
+    font-weight: bold;
+    color: #0d6efd;
+  }
+
+  .btn15 {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #0d6efd;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 5px;
+    transition: background-color 0.3s ease-in-out;
+  }
+
+  .btn15:hover {
+    background-color: #0c5dd6;
+  }
+
+  .new-badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background-color: #0c5dd6;
+    color: #fff;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    text-transform: uppercase;
+  }
+</style>
+{% endblock css %} {% block page_title %} Home {% endblock page_title %}
+<!-- Page Content -->
+
+{% block content %}
+<section>
+  <div class="container-fluid">
+    <section class="section-products d-flex">
+      <div class="filters border border-black p-3 filters-dn w-25">
+        <h3>Filters</h3>
+        <!-- Category filter -->
+
+        <p style="margin-block: 1rem 0.7rem">Categories:</p>
+        {% for cat in categories %}
+        <div>
+          <button
+            class="btn"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#collapseExample{{cat.name}}"
+            aria-expanded="false"
+            aria-controls="collapseExample"
+          >
+            {{cat.name}} <i class="fa-solid fa-angle-down"></i>
+          </button>
+
+          {% for sub_cat in cat.sub_category_set.all %}
+          <div
+            class="collapse filter-products-values"
+            id="collapseExample{{cat.name}}"
+          >
+            <div
+              class="card card-body mb-1 values-filter border-0"
+              style="cursor: pointer"
+            >
+              <input
+                type="checkbox"
+                class="btn-check"
+                id="btn-check"
+                autocomplete="off"
+              />
+              <label class="btn btn-primary filter-value-sty" for="btn-check"
+                >{{sub_cat.name}}</label
+              >
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% endfor %}
+        <!-- Attributes filter -->
+        <p style="margin-block: 1rem 0.7rem">Attributes:</p>
+        {% for attribute, values in attrs %}
+        <div>
+          <button
+            class="btn"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#collapseExample{{attribute}}"
+            aria-expanded="false"
+            aria-controls="collapseExample"
+          >
+            {{attribute}} <i class="fa-solid fa-angle-down"></i>
+          </button>
+
+          {% for i in values %}
+
+          <div
+            class="collapse filter-products-values"
+            id="collapseExample{{attribute}}"
+          >
+            <div
+              class="card card-body mb-1 values-filter border-0"
+              style="cursor: pointer"
+            >
+              <input
+                type="checkbox"
+                class="btn-check"
+                id="btn-check"
+                autocomplete="off"
+              />
+              <label class="btn btn-primary filter-value-sty" for="btn-check"
+                >{{i}}</label
+              >
+            </div>
+          </div>
+
+          {% endfor %}
+        </div>
+        {% endfor %}
+      </div>
+
+      <div class="container w-75">
+        <div class="row justify-content-center text-center">
+          <div class="col-md-8 col-lg-6">
+            <div class="header">
+              <h2>Products</h2>
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          {% for product in product_inventories %}
+          <!-- Single Product -->
+          <div class="col-md-6 col-lg-4 col-xl-3">
+            <div class="product">
+              <img src="{{product.img_url.url}}" alt="Product Image" />
+              <div class="product-info">
+                <h2>{{product.product.name}}</h2>
+                <p class="price">${{product.retail_price}}</p>
+                <a href="{% url 'product_detail' product.sku %}" class="btn15"
+                  >See Product</a
+                >
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </section>
+  </div>
+</section>
+{% endblock content %}

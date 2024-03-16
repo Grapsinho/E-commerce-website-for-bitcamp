@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Login Form</title>
+    <link rel="stylesheet" href="{% static 'css/login1.css' %}" />
+  </head>
+  <body>
+    <div class="container">
+      <div class="login form">
+        <header>Login</header>
+        <form method="post">
+          {% csrf_token %}
+          <input
+            type="text"
+            id="email"
+            name="email"
+            placeholder="Enter your email"
+          />
+          <input
+            type="password"
+            id="password"
+            name="password"
+            placeholder="Enter your password"
+          />
+          <a href="#">Forgot password?</a>
+          <input type="button" class="button" value="Login" />
+        </form>
+
+        <p id="messages" style="color: red"></p>
+
+        <div class="signup">
+          <span class="signup"
+            >Don't have an account?
+            <a href="{% url 'registration' %}">Signup</a>
+          </span>
+        </div>
+        <p id="error-message"></p>
+      </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+      let email = document.querySelector("#email");
+      let password1 = document.querySelector("#password");
+
+      function sanitizeInput(userInput) {
+        // Remove all HTML tags from user input
+        let sanitizedInput = userInput.replace(/(<([^>]+)>)/gi, "");
+        return sanitizedInput;
+      }
+
+      function getCookie(name) {
+        var cookieValue = null;
+        if (document.cookie && document.cookie !== "") {
+          var cookies = document.cookie.split(";");
+          for (var i = 0; i < cookies.length; i++) {
+            var cookie = jQuery.trim(cookies[i]);
+            // Check if this cookie string begins with the name provided
+            if (cookie.substring(0, name.length + 1) === name + "=") {
+              cookieValue = decodeURIComponent(
+                cookie.substring(name.length + 1)
+              );
+              break;
+            }
+          }
+        }
+        return cookieValue;
+      }
+      var csrftoken = getCookie("csrftoken");
+
+      // Clear any previous error messages
+      document.getElementById("error-message").textContent = "";
+
+      $(".button").on("click", function () {
+        const emailVal = email.value;
+        const pass1Val = password1.value;
+
+        if (!emailVal || !pass1Val) {
+          alert(
+            "Please fill out all the fields!\n\n*Note: Passwords must be at least 8 characters long."
+          );
+          return false;
+        } else if (pass1Val.length < 8) {
+          alert(
+            "Password is too short!\n\n*Note: Password should be at least 8 characters long."
+          );
+          return false;
+        }
+
+        $.ajax({
+          url: `${location.protocol}//${location.host}/auth/signin/`,
+          type: "POST",
+          headers: { "X-CSRFToken": csrftoken },
+          contentType: "application/json",
+          data: JSON.stringify({
+            email: sanitizeInput(emailVal),
+            password: sanitizeInput(pass1Val),
+          }),
+          success: function (data) {
+            console.log(data);
+
+            if (data.message == "Email or password is invalid") {
+              document.querySelector("#messages").textContent = data.message;
+            } else {
+              const token = data.tokens;
+              localStorage.setItem("access_token", token.access); // Store securely
+              localStorage.setItem("refresh_token", token.refresh); // Store securely
+              window.location.href = "/"; // Redirect to secure area
+            }
+          },
+          error: function (error) {
+            console.error("Registration failed:", error);
+            const message = error.response?.data?.message || "Login failed.";
+            document.getElementById("error-message").textContent = message;
+          },
+        });
+      });
+    </script>
+  </body>
+</html>

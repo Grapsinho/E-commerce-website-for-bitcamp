@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+
+    <style>
+      .main-navbar {
+        border-bottom: 1px solid #ccc;
+      }
+      .main-navbar .top-navbar {
+        background-color: #2874f0;
+        padding-top: 15px;
+        padding-bottom: 15px;
+      }
+      .main-navbar .top-navbar .brand-name {
+        color: #fff;
+      }
+      .main-navbar .top-navbar .nav-link {
+        color: #fff;
+        font-size: 16px;
+        font-weight: 500;
+      }
+      .main-navbar .top-navbar .dropdown-menu {
+        padding: 0px 0px;
+        border-radius: 0px;
+      }
+      .main-navbar .top-navbar .dropdown-menu .dropdown-item {
+        padding: 8px 16px;
+        border-bottom: 1px solid #ccc;
+        font-size: 14px;
+      }
+      .main-navbar .top-navbar .dropdown-menu .dropdown-item i {
+        width: 20px;
+        text-align: center;
+        color: #2874f0;
+        font-size: 14px;
+      }
+      .main-navbar .navbar {
+        padding: 0px;
+        background-color: #ddd;
+      }
+      .main-navbar .navbar .nav-item .nav-link {
+        padding: 8px 20px;
+        color: #000;
+        font-size: 15px;
+      }
+
+      @media only screen and (max-width: 600px) {
+        .main-navbar .top-navbar .nav-link {
+          font-size: 12px;
+          padding: 8px 10px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="main-navbar shadow-sm sticky-top">
+      <div class="top-navbar">
+        <div class="container-fluid">
+          <div class="row">
+            <div
+              class="col-md-2 my-auto d-none d-sm-none d-md-block d-lg-block"
+            >
+              <a href="#" style="font-size: 1.3rem" class="brand-name"
+                >E-commerce</a
+              >
+            </div>
+            <div class="col-md-5 my-auto">
+              <form role="search">
+                <div class="input-group">
+                  <input
+                    type="search"
+                    placeholder="Search your product"
+                    class="form-control"
+                  />
+                  <button class="btn bg-white" type="submit">
+                    <i class="fa fa-search"></i>
+                  </button>
+                </div>
+              </form>
+            </div>
+            <div class="col-md-5 my-auto">
+              <ul class="nav justify-content-end align-items-center">
+                <li class="nav-item">
+                  <a class="nav-link" href="#">
+                    <i class="fa fa-shopping-cart"></i> Cart (0)
+                  </a>
+                </li>
+
+                <div>
+                  {% if request.user.is_authenticated %}
+                  <div>
+                    {% if request.user.is_vendor %}
+                    <li class="nav-item dropdown">
+                      <a
+                        class="nav-link dropdown-toggle"
+                        href="#"
+                        id="navbarDropdown"
+                        role="button"
+                        data-bs-toggle="dropdown"
+                        aria-expanded="false"
+                      >
+                        <i class="fa fa-user"></i> {{vendor.shop_name}}
+                      </a>
+                      <ul
+                        class="dropdown-menu"
+                        aria-labelledby="navbarDropdown"
+                      >
+                        <li>
+                          <a
+                            class="dropdown-item"
+                            href="{% url 'add_products' %}"
+                            ><i class="fa fa-plus"></i> Add Products</a
+                          >
+                        </li>
+                        <li>
+                          <a class="dropdown-item" href="#"
+                            ><i class="fa fa-user"></i> Dashboard</a
+                          >
+                        </li>
+                        <li>
+                          <a class="dropdown-item" href="{% url 'logout' %}"
+                            ><i class="fa fa-sign-out"></i> Logout</a
+                          >
+                        </li>
+                      </ul>
+                    </li>
+                    {% else %}
+                    <li class="nav-item dropdown">
+                      <a
+                        class="nav-link dropdown-toggle"
+                        href="#"
+                        id="navbarDropdown"
+                        role="button"
+                        data-bs-toggle="dropdown"
+                        aria-expanded="false"
+                      >
+                        <i class="fa fa-user"></i> {{request.user}}
+                      </a>
+                      <ul
+                        class="dropdown-menu"
+                        aria-labelledby="navbarDropdown"
+                      >
+                        <li>
+                          <a class="dropdown-item" href="#"
+                            ><i class="fa fa-user"></i> Profile</a
+                          >
+                        </li>
+                        <li>
+                          <a class="dropdown-item" href="{% url 'logout' %}"
+                            ><i class="fa fa-sign-out"></i> Logout</a
+                          >
+                        </li>
+                      </ul>
+                    </li>
+                    {% endif %}
+                  </div>
+                  {% else %}
+                  <a class="text-light" href="{% url 'login' %}"
+                    ><i class="fa fa-sign-in"></i> Login</a
+                  >
+                  {% endif %}
+                </div>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
