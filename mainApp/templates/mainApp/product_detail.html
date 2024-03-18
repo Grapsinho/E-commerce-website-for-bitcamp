@@ -1,1 +1,165 @@
-product detail
+{% extends 'mainApp/main.html' %} {% load static %} {% block page_title %}
+{{produ_name}} {% endblock %} {% block css %}
+<link
+  rel="stylesheet"
+  href="{% static 'css/product_dtl1.css' %}"
+  type="text/css"
+  media="screen"
+/>
+{% endblock %} {% block content %}
+
+<section class="main-section-productDtl">
+  <div class="container-fluid d-flex gap-3 res-cont">
+    <div class="photo-border-width" style="width: 60%">
+      <div
+        class="photos border d-flex justify-content-center p-3 slider-container"
+        style="overflow: hidden; max-height: 560px"
+      >
+        <div
+          class="otherimgs d-flex gap-2 thumbnails"
+          style="flex-direction: column; width: 20%"
+        >
+          {% for i in product %}
+          <div class="otherimg-div" style="cursor: pointer">
+            <img
+              src="/images/{{i.img_url}}"
+              alt="{{j.alt_text}}"
+              style="width: 60px"
+              class="thumbnail"
+            />
+          </div>
+          {% endfor %}
+        </div>
+
+        <div class="isfeature viewport" style="width: 80%">
+          {% for i in product %} {% if i.is_default %}
+          <div class="defaultimg-div">
+            <img
+              src="/images/{{i.img_url}}"
+              alt="{{j.alt_text}}"
+              style="width: 80%"
+              class="main-image"
+            />
+          </div>
+
+          {% endif %}{% endfor %}
+        </div>
+      </div>
+
+      <div class="desc border p-4 mt-3 desc1">
+        <h4>Description:</h4>
+
+        <p class="description">
+          Lorem ipsum dolor sit amet consectetur adipisicing elit. Officiis enim
+          reprehenderit obcaecati adipisci nostrum libero harum esse sit sed
+          delectus exercitationem dolores molestiae, alias dolore accusamus.
+          Laudantium corporis rerum quo.
+        </p>
+      </div>
+    </div>
+
+    <div class="product-detail border p-3" style="width: 40%">
+      <h1 class="name">{{produ_name}}</h1>
+
+      <p class="code">code: <span class="code32">2314761823</span></p>
+
+      <div
+        class="filters d-flex gap-2"
+        style="flex-wrap: wrap; flex-direction: column"
+      >
+        {% for attribute, values in rec_data %}
+
+        <div>
+          <div
+            class="d-flex gap-2"
+            style="flex-wrap: wrap; flex-direction: column"
+          >
+            {{attribute}}:
+
+            <div class="d-flex gap-2">
+              {% for value in values %}
+
+              <div
+                class="collapse show filter-products-values"
+                id="collapseExample{{attribute}}"
+                data-filter="{{attribute}}"
+                data-value="{{value}}"
+              >
+                <div class="card card-body mb-1 values-filter border-0 p-0">
+                  <input
+                    type="checkbox"
+                    class="btn-check"
+                    id="btn-check-{{value}}"
+                    autocomplete="off"
+                  />
+                  <label
+                    class="btn btn-primary filter-value-sty"
+                    data-filter2="{{attribute}}"
+                    for="btn-check"
+                    >{{value}}</label
+                  >
+                </div>
+              </div>
+
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+
+        {% endfor %}
+      </div>
+
+      <div class="priceandquantity mt-5">
+        <h4 class="text-dark">
+          Price:
+          <span class="price" style="color: #1d3b81 !important">$34.95</span>
+        </h4>
+
+        <h4 class="">
+          Is Left:
+          <span class="unit" style="color: #1d3b81 !important">100</span>
+        </h4>
+
+        <h4 class="mt-5">Quantity:</h4>
+        <div class="quantity">
+          <button class="minus"><i class="fa-solid fa-minus"></i></button>
+          <input
+            type="number"
+            value="1"
+            min="1"
+            max=""
+            step="1"
+            name="quantity"
+            class="input-quan"
+          />
+          <button class="plus"><i class="fa-solid fa-plus"></i></button>
+        </div>
+
+        <button
+          class="option mt-5 add-to-cart"
+          style="outline: none; border: none; padding-inline: 3rem"
+        >
+          Add To Cart
+        </button>
+      </div>
+
+      <div class="desc border p-4 mt-3 desc2" style="display: none">
+        <h4>Description:</h4>
+
+        <p class="description">
+          Lorem ipsum dolor sit amet consectetur adipisicing elit. Officiis enim
+          reprehenderit obcaecati adipisci nostrum libero harum esse sit sed
+          delectus exercitationem dolores molestiae, alias dolore accusamus.
+          Laudantium corporis rerum quo.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+{% block scripts %}
+
+<script src="{% static 'js/product_dtl.js' %}"></script>
+{% endblock scripts %} {% endblock %}

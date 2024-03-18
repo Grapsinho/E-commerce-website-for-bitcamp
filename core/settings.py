@@ -121,7 +121,7 @@ TEMPLATES = [
 WSGI_APPLICATION = 'core.wsgi.application'
 
 # როცა დავიწყებ ვებსოქეთის გამოყენებას ეს დამჭირდება
-# ASGI_APPLICATION = 'core.asgi.application'
+ASGI_APPLICATION = 'core.asgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
@@ -148,14 +148,14 @@ DATABASES = {
 # ვიყენებთ რედის მესეჯ ბროკერად, მჭირდება იმიტომ რომ ვაპირებ ვებსოქეთის გამოყენებას
 # მესიჯ ბროკერი საშუალებას აძლევს ჩვენს აპებს და სერვისებს რომ იურთიერთონ ცვალონ ინფორმაცია
 # ასერომვთქვათ მიდლლმენია
-# CHANNEL_LAYERS = {
-#     "default": {
-#         "BACKEND": "channels_redis.core.RedisChannelLayer",
-#         "CONFIG": {
-#             "hosts": [("localhost", 6379)],
-#         },
-#     },
-# }
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("localhost", 6379)],
+        },
+    },
+}
 
 
 

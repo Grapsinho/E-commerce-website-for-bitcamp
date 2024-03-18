@@ -460,102 +460,102 @@
 
               console.log(product_obj, "magari");
               console.log(sub_prod_obj, "magari2");
-
-              let modalAdded = false;
-
-              $.ajax({
-                url: `${location.protocol}//${location.host}/ajax_viewFor_CreteProducts/`,
-                type: "POST",
-                headers: {
-                  "X-CSRFToken": csrftoken,
-                  "Authorization": `Bearer ${jwtToken}`,
-                },
-                processData: false,
-                contentType: false,
-                data: formData,
-                success: function (data) {
-                  console.log(data);
-                  if (!modalAdded) {
-                    $(".modal_container").css({
-                      "display": "grid",
-                    });
-
-                    $(".modal_container").append(
-                      `
-                                    <div class="modal12" style="text-align: center">
-                                      <h3 style="font-size: 1.4rem">Your Product Is Created</h3>
-                                      <a href="${location.protocol}//${location.host}/product_detail/${data.product.sku}/" class="btn155">See Product</a>
-                                    </div>
-                                    `
-                    );
-
-                    modalAdded = true;
-                  }
-                },
-                error: function (error) {
-                  console.error(error.responseJSON.error);
-
-                  if (error.responseJSON.error == "Token has expired") {
-                    $.ajax({
-                      url: `${location.protocol}//${location.host}/auth/jwt/refresh/`,
-                      type: "POST",
-                      headers: {
-                        "X-CSRFToken": csrftoken,
-                      },
-                      contentType: "application/json",
-                      data: JSON.stringify({
-                        refresh: localStorage.getItem("refresh_token"),
-                      }),
-                      success: function (data) {
-                        console.log(data);
-                        localStorage.setItem("access_token", data.access);
-
-                        ////////////////////////////////////////////////////
-                        // when we refresh token we sending one more request
-                        $.ajax({
-                          url: `${location.protocol}//${location.host}/ajax_viewFor_CreteProducts/`,
-                          type: "POST",
-                          headers: {
-                            "X-CSRFToken": csrftoken,
-                            "Authorization": `Bearer ${localStorage.getItem(
-                              "access_token"
-                            )}`,
-                          },
-                          processData: false,
-                          contentType: false,
-                          data: formData,
-                          success: function (data) {
-                            console.log(data);
-                            if (!modalAdded) {
-                              $(".modal_container").css({
-                                "display": "grid",
-                              });
-
-                              $(".modal_container").append(
-                                `
-                                    <div class="modal12" style="text-align: center">
-                                      <h3 style="font-size: 1.4rem">Your Product Is Created</h3>
-                                      <a href="${location.protocol}//${location.host}/product_detail/${data.product.sku}/" class="btn155">See Product</a>
-                                    </div>
-                                    `
-                              );
-
-                              modalAdded = true;
-                            }
-                          },
-                          error: function (error) {
-                            console.error(error);
-                          },
-                        });
-                      },
-                      error: function (error) {
-                        console.error(error);
-                      },
-                    });
-                  }
-                },
-              });
             }
+
+            let modalAdded = false;
+
+            $.ajax({
+              url: `${location.protocol}//${location.host}/ajax_viewFor_CreteProducts/`,
+              type: "POST",
+              headers: {
+                "X-CSRFToken": csrftoken,
+                "Authorization": `Bearer ${jwtToken}`,
+              },
+              processData: false,
+              contentType: false,
+              data: formData,
+              success: function (data) {
+                console.log(data);
+                if (!modalAdded) {
+                  $(".modal_container").css({
+                    "display": "grid",
+                  });
+
+                  $(".modal_container").append(
+                    `
+                      <div class="modal12" style="text-align: center">
+                        <h3 style="font-size: 1.4rem">Your Product Is Created</h3>
+                        <a href="${location.protocol}//${location.host}/product_detail/${data.product.product_id}/" class="btn155">See Product</a>
+                      </div>
+                      `
+                  );
+
+                  modalAdded = true;
+                }
+              },
+              error: function (error) {
+                console.error(error.responseJSON.error);
+
+                if (error.responseJSON.error == "Token has expired") {
+                  $.ajax({
+                    url: `${location.protocol}//${location.host}/auth/jwt/refresh/`,
+                    type: "POST",
+                    headers: {
+                      "X-CSRFToken": csrftoken,
+                    },
+                    contentType: "application/json",
+                    data: JSON.stringify({
+                      refresh: localStorage.getItem("refresh_token"),
+                    }),
+                    success: function (data) {
+                      console.log(data);
+                      localStorage.setItem("access_token", data.access);
+
+                      ////////////////////////////////////////////////////
+                      // when we refresh token we sending one more request
+                      $.ajax({
+                        url: `${location.protocol}//${location.host}/ajax_viewFor_CreteProducts/`,
+                        type: "POST",
+                        headers: {
+                          "X-CSRFToken": csrftoken,
+                          "Authorization": `Bearer ${localStorage.getItem(
+                            "access_token"
+                          )}`,
+                        },
+                        processData: false,
+                        contentType: false,
+                        data: formData,
+                        success: function (data) {
+                          console.log(data);
+                          if (!modalAdded) {
+                            $(".modal_container").css({
+                              "display": "grid",
+                            });
+
+                            $(".modal_container").append(
+                              `
+                      <div class="modal12" style="text-align: center">
+                        <h3 style="font-size: 1.4rem">Your Product Is Created</h3>
+                        <a href="${location.protocol}//${location.host}/product_detail/${data.product.product_id}/" class="btn155">See Product</a>
+                      </div>
+                      `
+                            );
+
+                            modalAdded = true;
+                          }
+                        },
+                        error: function (error) {
+                          console.error(error);
+                        },
+                      });
+                    },
+                    error: function (error) {
+                      console.error(error);
+                    },
+                  });
+                }
+              },
+            });
           });
 
         // all codes from above are for the first sub-product
@@ -840,6 +840,10 @@
                   "product_desc": sanitizeInput(product_desc.value),
                 };
 
+                let arrt435 = [];
+
+                formData.append("product_obj", JSON.stringify(product_obj));
+
                 let modalAdded = false;
 
                 for (
@@ -882,6 +886,8 @@
                       },
                     };
 
+                    arrt435.push(sub_prod_obj);
+
                     product_attribute.forEach((element, index) => {
                       if ($(element).data("count") - 1 === id) {
                         if (
@@ -903,118 +909,113 @@
                         }
                       }
                     });
-
-                    formData.append("product_obj", JSON.stringify(product_obj));
-                    formData.append(
-                      "sub_prod_obj",
-                      JSON.stringify(sub_prod_obj)
-                    );
+                    formData.append("sub_prod_obj", JSON.stringify(arrt435));
                     formData.append("lent", $(".sub_prod1").length);
                   }
 
                   console.log(product_obj, "magari");
                   console.log(sub_prod_obj, "magari2");
+                }
 
-                  if (
-                    everything_fine &&
-                    everything_fine1 &&
-                    everything_fine2 &&
-                    everything_fine3
-                  ) {
-                    $.ajax({
-                      url: `${location.protocol}//${location.host}/ajax_viewFor_CreteProducts/`,
-                      type: "POST",
-                      headers: {
-                        "X-CSRFToken": csrftoken,
-                        "Authorization": `Bearer ${jwtToken}`,
-                      },
-                      processData: false,
-                      contentType: false,
-                      data: formData,
-                      success: function (data) {
-                        console.log(data);
-                        if (!modalAdded) {
-                          $(".modal_container").css({
-                            "display": "grid",
-                          });
+                if (
+                  everything_fine &&
+                  everything_fine1 &&
+                  everything_fine2 &&
+                  everything_fine3
+                ) {
+                  $.ajax({
+                    url: `${location.protocol}//${location.host}/ajax_viewFor_CreteProducts/`,
+                    type: "POST",
+                    headers: {
+                      "X-CSRFToken": csrftoken,
+                      "Authorization": `Bearer ${jwtToken}`,
+                    },
+                    processData: false,
+                    contentType: false,
+                    data: formData,
+                    success: function (data) {
+                      console.log(data);
+                      if (!modalAdded) {
+                        $(".modal_container").css({
+                          "display": "grid",
+                        });
 
-                          $(".modal_container").append(
-                            `
+                        $(".modal_container").append(
+                          `
                                     <div class="modal12" style="text-align: center">
                                       <h3 style="font-size: 1.4rem">Your Product Is Created</h3>
-                                      <a href="${location.protocol}//${location.host}/product_detail/${data.product.sku}/" class="btn155">See Product</a>
+                                      <a href="${location.protocol}//${location.host}/product_detail/${data.product.product_id}/" class="btn155">See Product</a>
                                     </div>
                                     `
-                          );
+                        );
 
-                          modalAdded = true;
-                        }
-                      },
-                      error: function (error) {
-                        console.error(error.responseJSON.error);
+                        modalAdded = true;
+                      }
+                    },
+                    error: function (error) {
+                      console.error(error.responseJSON.error);
 
-                        if (error.responseJSON.error == "Token has expired") {
-                          $.ajax({
-                            url: `${location.protocol}//${location.host}/auth/jwt/refresh/`,
-                            type: "POST",
-                            headers: {
-                              "X-CSRFToken": csrftoken,
-                            },
-                            contentType: "application/json",
-                            data: JSON.stringify({
-                              refresh: localStorage.getItem("refresh_token"),
-                            }),
-                            success: function (data) {
-                              console.log(data);
-                              localStorage.setItem("access_token", data.access);
+                      if (error.responseJSON.error == "Token has expired") {
+                        $.ajax({
+                          url: `${location.protocol}//${location.host}/auth/jwt/refresh/`,
+                          type: "POST",
+                          headers: {
+                            "X-CSRFToken": csrftoken,
+                          },
+                          contentType: "application/json",
+                          data: JSON.stringify({
+                            refresh: localStorage.getItem("refresh_token"),
+                          }),
+                          success: function (data) {
+                            console.log(data);
+                            localStorage.setItem("access_token", data.access);
 
-                              ////////////////////////////////////////////////////
-                              // when we refresh token we sending one more request
-                              $.ajax({
-                                url: `${location.protocol}//${location.host}/ajax_viewFor_CreteProducts/`,
-                                type: "POST",
-                                headers: {
-                                  "X-CSRFToken": csrftoken,
-                                  "Authorization": `Bearer ${localStorage.getItem(
-                                    "access_token"
-                                  )}`,
-                                },
-                                processData: false,
-                                contentType: false,
-                                data: formData,
-                                success: function (data) {
-                                  console.log(data);
+                            ////////////////////////////////////////////////////
+                            // when we refresh token we sending one more request
+                            $.ajax({
+                              url: `${location.protocol}//${location.host}/ajax_viewFor_CreteProducts/`,
+                              type: "POST",
+                              headers: {
+                                "X-CSRFToken": csrftoken,
+                                "Authorization": `Bearer ${localStorage.getItem(
+                                  "access_token"
+                                )}`,
+                              },
+                              processData: false,
+                              contentType: false,
+                              data: formData,
+                              success: function (data) {
+                                console.log(data);
 
-                                  if (!modalAdded) {
-                                    $(".modal_container").css({
-                                      "display": "grid",
-                                    });
+                                if (!modalAdded) {
+                                  $(".modal_container").css({
+                                    "display": "grid",
+                                  });
 
-                                    $(".modal_container").append(
-                                      `
-                                    <div class="modal12" style="text-align: center">
-                                      <h3 style="font-size: 1.4rem">Your Product Is Created</h3>
-                                      <a href="${location.protocol}//${location.host}/product_detail/${data.product.sku}/" class="btn155">See Product</a>
-                                    </div>
+                                  $(".modal_container").append(
                                     `
-                                    );
+                                      <div class="modal12" style="text-align: center">
+                                        <h3 style="font-size: 1.4rem">Your Product Is Created</h3>
+                                        <a href="${location.protocol}//${location.host}/product_detail/${data.product.product_id}/" class="btn155">See Product</a>
+                                      </div>
+                                    `
+                                  );
 
-                                    modalAdded = true;
-                                  }
-                                },
-                                error: function (error) {
-                                  console.error(error);
-                                },
-                              });
-                            },
-                            error: function (error) {
-                              console.error(error);
-                            },
-                          });
-                        }
-                      },
-                    });
-                  }
+                                  modalAdded = true;
+                                }
+                              },
+                              error: function (error) {
+                                console.error(error);
+                              },
+                            });
+                          },
+                          error: function (error) {
+                            console.error(error);
+                          },
+                        });
+                      }
+                    },
+                  });
                 }
               });
           });

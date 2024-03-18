@@ -64,6 +64,19 @@
     font-weight: bold;
     text-transform: uppercase;
   }
+
+  .high_to_low-sty.active {
+    background: #3765aa !important;
+  }
+
+  .low_to_high-sty.active {
+    background: #3765aa !important;
+  }
+
+  .filter-value-sty.active {
+    background: #3765aa !important;
+    border-color: #3765aa !important;
+  }
 </style>
 {% endblock css %} {% block page_title %} Home {% endblock page_title %}
 <!-- Page Content -->
@@ -76,6 +89,58 @@
         <h3>Filters</h3>
         <!-- Category filter -->
 
+        <p style="margin-block: 1rem 0.7rem">Price:</p>
+        <div>
+          <button
+            class="btn"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#collapseExamplePrice"
+            aria-expanded="false"
+            aria-controls="collapseExample"
+          >
+            Price <i class="fa-solid fa-angle-down"></i>
+          </button>
+          <div
+            class="collapse filter-products-values"
+            id="collapseExamplePrice"
+          >
+            <div
+              class="card card-body mb-1 values-filter border-0"
+              style="cursor: pointer"
+            >
+              <input
+                type="radio"
+                class="btn-check high_to_low"
+                id="high_to_low"
+                autocomplete="off"
+              />
+              <label
+                class="btn btn-primary filter-value-sty high_to_low-sty"
+                for="high_to_low"
+                >High To Low</label
+              >
+            </div>
+
+            <div
+              class="card card-body mb-1 values-filter border-0"
+              style="cursor: pointer"
+            >
+              <input
+                type="radio"
+                class="btn-check low_to_high"
+                id="low_to_high"
+                autocomplete="off"
+              />
+              <label
+                class="btn btn-primary filter-value-sty low_to_high-sty"
+                for="low_to_high"
+                >Low To High</label
+              >
+            </div>
+          </div>
+        </div>
+
         <p style="margin-block: 1rem 0.7rem">Categories:</p>
         {% for cat in categories %}
         <div>
@@ -86,14 +151,16 @@
             data-bs-target="#collapseExample{{cat.name}}"
             aria-expanded="false"
             aria-controls="collapseExample"
+            data-cat="{{cat.name}}"
           >
             {{cat.name}} <i class="fa-solid fa-angle-down"></i>
           </button>
 
           {% for sub_cat in cat.sub_category_set.all %}
           <div
-            class="collapse filter-products-values"
+            class="collapse filter-products-values_forCat"
             id="collapseExample{{cat.name}}"
+            data-cat="{{sub_cat.name}}"
           >
             <div
               class="card card-body mb-1 values-filter border-0"
@@ -102,7 +169,7 @@
               <input
                 type="checkbox"
                 class="btn-check"
-                id="btn-check"
+                id="btn-check-{{sub_cat.name}}"
                 autocomplete="off"
               />
               <label class="btn btn-primary filter-value-sty" for="btn-check"
@@ -116,6 +183,8 @@
         <!-- Attributes filter -->
         <p style="margin-block: 1rem 0.7rem">Attributes:</p>
         {% for attribute, values in attrs %}
+        <!--check if attribute is not none-->
+        {% if attribute %}
         <div>
           <button
             class="btn"
@@ -133,6 +202,7 @@
           <div
             class="collapse filter-products-values"
             id="collapseExample{{attribute}}"
+            data-cat="{{i}}"
           >
             <div
               class="card card-body mb-1 values-filter border-0"
@@ -141,7 +211,7 @@
               <input
                 type="checkbox"
                 class="btn-check"
-                id="btn-check"
+                id="btn-check-{{i}}"
                 autocomplete="off"
               />
               <label class="btn btn-primary filter-value-sty" for="btn-check"
@@ -152,6 +222,8 @@
 
           {% endfor %}
         </div>
+        {% endif %}
+        <!--end-->
         {% endfor %}
       </div>
 
@@ -163,25 +235,12 @@
             </div>
           </div>
         </div>
-        <div class="row">
-          {% for product in product_inventories %}
-          <!-- Single Product -->
-          <div class="col-md-6 col-lg-4 col-xl-3">
-            <div class="product">
-              <img src="{{product.img_url.url}}" alt="Product Image" />
-              <div class="product-info">
-                <h2>{{product.product.name}}</h2>
-                <p class="price">${{product.retail_price}}</p>
-                <a href="{% url 'product_detail' product.sku %}" class="btn15"
-                  >See Product</a
-                >
-              </div>
-            </div>
-          </div>
-          {% endfor %}
-        </div>
+        <div class="row" id="product_list"></div>
       </div>
     </section>
   </div>
 </section>
-{% endblock content %}
+
+{% block scripts %}
+<script src="{% static 'js/main.js' %}"></script>
+{% endblock scripts %} {% endblock content %}

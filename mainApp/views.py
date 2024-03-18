@@ -10,7 +10,7 @@ import os
 from django.core.files.base import ContentFile
 import base64
 
-# ესეიგი დღეს დავჯდები და სერჩს და ფილტრაციას გავაკეთებ
+# DONE ესეიგი დღეს დავჯდები და სერჩს და ფილტრაციას გავაკეთებ
 # ეს ორი რო მორჩება ნუ სერჩი გვაქ ფილტრაცია არის და მაგის მერე უეჭველად გადავდივარ პროდუქტ დეტაილზე
 #პროდუქტ დეტაილი რო მორჩება მერე ვიზავ პროდუქტის კარტში დამატებას და ამის მერე ვიზავ დეშბოარდ ფეიჯს
 
@@ -30,7 +30,14 @@ def home(request):
         vendor = Vendor.objects.get(email=request.user)
         if request.method == 'GET':
             # Retrieve all ProductInventory instances
-            product_inventories = ProductInventory.objects.all()
+
+            q = request.GET.get('search') if request.GET.get('search') != None else ''
+
+            if q == '':
+                product_inventories = ProductInventory.objects.all()
+            else:
+                product_inventories = ProductInventory.objects.filter(product__name__icontains=q)
+
             attr_dict = {}
             categories = Category.objects.all()
 
@@ -77,8 +84,75 @@ def add_products(request):
     return render(request, 'mainApp/add_product.html', context)
 
 def product_detail(request, sku):
-    print(sku)
-    return render(request, 'mainApp/product_detail.html')
+    vendor = Vendor.objects.get(email=request.user)
+    product = ProductInventory.objects.filter(product__unique_id=sku)
+
+    opr = product.values("productattributevaluess__attributevalues__attribute__name", "productattributevaluess__attributevalues__value").distinct()
+
+    produ_name = ''
+
+    for i in product:
+        produ_name = i.product.name
+    
+    reorganized_data = {}
+
+    for i in opr:
+        attribute_name = i["productattributevaluess__attributevalues__attribute__name"]
+        attribute_value = i["productattributevaluess__attributevalues__value"]
+        
+        # Check if the attribute name already exists in the reorganized data
+        if attribute_name in reorganized_data:
+            # If it exists, append the value to the existing list
+            reorganized_data[attribute_name].append(attribute_value)
+        else:
+            # If it doesn't exist, create a new list with the value
+            reorganized_data[attribute_name] = [attribute_value]
+
+    context = {'vendor': vendor, "product": product,"rec_data": reorganized_data.items(), "produ_name": produ_name}
+    return render(request, 'mainApp/product_detail.html', context)
+
+def filter_products_for_collections(request):
+    sort_option = request.GET.get('sort', 'low_to_high')
+    filters_cat = request.GET.get('filters_cat')
+    filters_attr = request.GET.get('filters_attr')
+
+    if filters_cat: 
+        filters_cat_dict = json.loads(filters_cat)
+    else:
+        filters_cat_dict = None
+
+    if filters_attr: 
+        filters_attr_dict = json.loads(filters_attr)
+    else:
+        filters_attr_dict = None
+
+    products = ProductInventory.objects.all().order_by('retail_price').distinct()
+
+    if filters_cat_dict: 
+        products = products.filter(product__category__name__in=filters_cat_dict)
+
+    if filters_attr_dict: 
+        products = products.filter(productattributevaluess__attributevalues__value__in=filters_attr_dict)
+
+    # Apply sorting
+    if sort_option == 'low_to_high':
+        products = products.order_by('retail_price')
+    elif sort_option == 'high_to_low':
+        products = products.order_by('-retail_price') 
+
+    serialized_products = [{
+            'name': product.product.name,
+            'price': product.retail_price,
+            'unique_id': product.product.unique_id,
+            'img_url': product.img_url.url,
+        
+        } for product in products.distinct()]
+
+
+    return JsonResponse({'products': serialized_products})
+
+
+
 
 import traceback
 @login_required
@@ -117,16 +191,21 @@ def ajax_viewFor_CreteProducts(request):
                 # Parse the JSON strings into Python objects
                 product_data = json.loads(product_obj_str)
                 sub_product_data = json.loads(sub_prod_obj_str)
+                
+                category = Category.objects.get_or_create(name=product_data['category'].title())
+                sub_category = Sub_Category.objects.get_or_create(name=product_data['product_sub_category'].title(), parent=category[0])
+                product = Product.objects.get_or_create(name=product_data["product_name"], vendor=user, description=product_data["product_desc"], category=sub_category[0])
+
+                if product[1]:
+                    product[0].unique_id = product[0].slug + f"-{product[0].pk}"
+                    product[0].save()
 
 
                 if lent == 1:
                     request.FILES.get('image').name = sub_product_data['product_id_1']['product_sku'] + request.FILES.get('image').name
 
-                    category = Category.objects.get_or_create(name=product_data['category'])
-                    sub_category = Sub_Category.objects.get_or_create(name=product_data['product_sub_category'], parent=category[0])
-                    product = Product.objects.get_or_create(name=product_data["product_name"], vendor=user, description=product_data["product_desc"], category=sub_category[0], unique_id=sub_product_data['product_id_1']['product_sku']+product_data["product_name"])
                     sub_product = ProductInventory.objects.get_or_create(
-                        sku=sub_product_data['product_id_1']['product_sku'],
+                        sku=sub_product_data['product_id_1']['product_sku']+f'-{user}',
                         retail_price=int(sub_product_data['product_id_1']['product_price']),
                         is_default=True,
                         img_url=request.FILES.get('image'),
@@ -168,45 +247,39 @@ def ajax_viewFor_CreteProducts(request):
                     if sub_product[1]:
                         sub_product[0].save()
                 elif int(lent) > 1:
-                    category = Category.objects.get_or_create(name=product_data['category'])
-                    sub_category = Sub_Category.objects.get_or_create(name=product_data['product_sub_category'], parent=category[0])
-                    product = Product.objects.get_or_create(name=product_data["product_name"], vendor=user, description=product_data["product_desc"], category=sub_category[0], unique_id=sub_category[0].name+product_data["product_name"])
-
-                    if product[1]:
-                        product[0].save()
-
                     for i_for_product_id in range(int(lent)):
-                        for j in sub_product_data.keys():
+                        for j in sub_product_data[i_for_product_id].keys():
                             if int(j.split(sep="_")[2]) == i_for_product_id:
-                                request.FILES.get('image').name = sub_product_data[f'product_id_{i_for_product_id}']['product_sku'] + request.FILES.get('image').name
+                                request.FILES.get('image').name = sub_product_data[i_for_product_id][f'product_id_{i_for_product_id}']['product_sku'] + request.FILES.get('image').name
 
                                 sub_product = ProductInventory.objects.get_or_create(
-                                    sku=sub_product_data[f'product_id_{i_for_product_id}']['product_sku'],
-                                    retail_price=int(sub_product_data[f'product_id_{i_for_product_id}']['product_price']),
-                                    is_default=sub_product_data[f'product_id_{i_for_product_id}']['form_check_input'],
+                                    sku=sub_product_data[i_for_product_id][f'product_id_{i_for_product_id}']['product_sku']+f'-{user}',
+                                    retail_price=int(sub_product_data[i_for_product_id][f'product_id_{i_for_product_id}']['product_price']),
+                                    is_default=sub_product_data[i_for_product_id][f'product_id_{i_for_product_id}']['form_check_input'],
                                     img_url=request.FILES.get('image'),
                                     product=product[0]
                                 )
 
                                 arr1 = []
 
-                                for i in sub_product_data[f'product_id_{i_for_product_id}'].keys():
+                                for i in sub_product_data[i_for_product_id][f'product_id_{i_for_product_id}'].keys():
                                     if i.startswith('attr'):
                                         arr1.append(i.split(sep='_')[1])
                                 
                                 for v in arr1:
-                                    attr = ProductAttribute.objects.get_or_create(name=v)
-                                    attr_value = ProductAttributeValue.objects.get_or_create(
-                                        attribute=attr[0], 
-                                        value=sub_product_data[f'product_id_{i_for_product_id}'][f"attr_{v}"]
-                                    )
+                                    if v is not None:
+                                        attr = ProductAttribute.objects.get_or_create(name=v)
+                                        attr_value = ProductAttributeValue.objects.get_or_create(
+                                            attribute=attr[0], 
+                                            value=sub_product_data[i_for_product_id][f'product_id_{i_for_product_id}'][f"attr_{v}"]
+                                        )
 
                                     #'product_id_attr_Size'
 
-                                    trgh_attr_value = ProductAttributeValues.objects.get_or_create(
-                                        attributevalues=attr_value[0], 
-                                        productinventory=sub_product[0]
-                                    )
+                                        trgh_attr_value = ProductAttributeValues.objects.get_or_create(
+                                            attributevalues=attr_value[0], 
+                                            productinventory=sub_product[0]
+                                        )
 
                                 if sub_product[1]:
                                     sub_product[0].save()
@@ -214,22 +287,13 @@ def ajax_viewFor_CreteProducts(request):
                 if int(lent) == 1:
                     # For demonstration purposes, let's just return a simple response
                     response_data = {'product': {
-                        "product_name": sub_product[0].product.name,
-                        "price": sub_product[0].retail_price,
-                        "sku": sub_product[0].sku,
-                        "img_url": sub_product[0].img_url.url,
-                        "is_default": True,
-                        "rec_data": json.dumps(reorganized_data)
+                       "product_id": product[0].unique_id,
                     },
                         "message": "Product Created Successfully"
                     }
                 elif int(lent) > 1:
                     response_data = {'product': {
-                        "product_name": sub_product[0].product.name,
-                        "price": sub_product[0].retail_price,
-                        "sku": sub_product[0].sku,
-                        "img_url": sub_product[0].img_url.url,
-                        "is_default": sub_product[0].is_default,
+                        "product_id": product[0].unique_id,
                     },
                         "message": "Product Created Successfully"
                     }
