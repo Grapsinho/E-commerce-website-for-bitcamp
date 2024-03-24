@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>Admin Dashboard</title>
+
+    <!-- Montserrat Font -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@100;200;300;400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-KK94CHFLLe+nY2dmCWGMq91rCGa5gtU4mk92HdvYe+M/SXH301p5ILy+dN9+nJOZ"
+      crossorigin="anonymous"
+    />
+
+    <!-- Material Icons -->
+    <link
+      href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined"
+      rel="stylesheet"
+    />
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'css/dashboard1.css' %}" />
+  </head>
+  <body>
+    <header>
+      <a href="{% url 'home' %}">E-commerce</a>
+    </header>
+
+    <div class="grid-container">
+      <!-- Main -->
+      <main class="main-container">
+        <div class="main-title">
+          <h2>DASHBOARD</h2>
+        </div>
+
+        <div class="main-cards">
+          <div class="card">
+            <div class="card-inner">
+              <h3>PRODUCTS</h3>
+              <span class="material-icons-outlined">inventory_2</span>
+            </div>
+            <h1 class="product_count">{{count_product}}</h1>
+          </div>
+
+          <div class="card">
+            <div class="card-inner">
+              <h3>PRODUCTS SOLD</h3>
+              <span class="material-icons-outlined"
+                >notification_important</span
+              >
+            </div>
+            <h1 class="product_count">249</h1>
+          </div>
+        </div>
+
+        <div
+          class="products mt-4 mb-4"
+          style="height: 300px; overflow-y: auto; overflow-x: auto"
+        >
+          <table class="table table-dark table-hover">
+            <thead>
+              <tr>
+                <th scope="col">Product Name</th>
+                <th scope="col">Price</th>
+                <th scope="col">SKU</th>
+                <th scope="col">Image</th>
+                <th scope="col">Update</th>
+                <th scope="col">Delete</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for product in products %}
+              <tr>
+                <th scope="row" class="rame" data-label="Product Name">
+                  {{product.product.name}}
+                </th>
+                <td class="rame" data-label="Price">
+                  {{product.retail_price}}
+                </td>
+                <td class="rame" data-label="SKU">{{product.sku}}</td>
+                <td data-label="Image">
+                  <a
+                    href="{% url 'product_detail' product.product.unique_id %}"
+                  >
+                    <img
+                      src="/static{{product.img_url.url}}"
+                      alt=""
+                      style="width: 50px"
+                    />
+                  </a>
+                </td>
+                <td data-label="Update" data-sku="{{product.sku}}">
+                  <span
+                    class="material-icons-outlined"
+                    id="update_product"
+                    data-sku="{{product.sku}}"
+                    style="cursor: pointer; color: grey; font-size: 1.7rem"
+                    >settings</span
+                  >
+                </td>
+                <td data-label="Delete" data-sku="{{product.sku}}">
+                  <span
+                    class="material-icons-outlined"
+                    data-bs-toggle="modal"
+                    data-bs-target="#exampleModal{{product.id}}"
+                    style="
+                      cursor: pointer;
+                      color: rgb(211, 40, 40);
+                      font-size: 1.7rem;
+                    "
+                    >delete</span
+                  >
+
+                  {% if product.is_default %}
+
+                  <div
+                    class="modal"
+                    id="warningModal"
+                    tabindex="-1"
+                    role="dialog"
+                    aria-labelledby="warningModalLabel"
+                    aria-hidden="true"
+                  >
+                    <div class="modal-dialog" role="document">
+                      <div class="modal-content">
+                        <div class="modal-header">
+                          <h5 class="modal-title" id="warningModalLabel">
+                            Warning: Deleting Default Product
+                          </h5>
+                          <button
+                            type="button"
+                            class="close"
+                            data-bs-dismiss="modal"
+                            aria-label="Close"
+                          >
+                            <span aria-hidden="true">&times;</span>
+                          </button>
+                        </div>
+                        <div class="modal-body">
+                          <!-- Warning message and options will be dynamically inserted here -->
+                        </div>
+                        <div class="modal-footer">
+                          <button
+                            type="button"
+                            class="btn btn-secondary"
+                            data-bs-dismiss="modal"
+                          >
+                            Close
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {% endif %}
+
+                  <!-- Modal -->
+                  <div
+                    class="modal fade bots_modal"
+                    id="exampleModal{{product.id}}"
+                    tabindex="-1"
+                    aria-labelledby="exampleModalLabel"
+                    aria-hidden="true"
+                  >
+                    <div class="modal-dialog">
+                      <div class="modal-content">
+                        <div class="modal-header">
+                          <h1
+                            class="modal-title fs-5 text-dark"
+                            id="exampleModalLabel"
+                            style="text-align: left"
+                          >
+                            Do You Want to Delete This Product? {{product.sku}}
+                          </h1>
+                          <button
+                            type="button"
+                            class="btn-close"
+                            data-bs-dismiss="modal"
+                            aria-label="Close"
+                          ></button>
+                        </div>
+                        <div class="modal-footer">
+                          <button
+                            type="button"
+                            class="btn btn-secondary"
+                            data-bs-dismiss="modal"
+                          >
+                            Close
+                          </button>
+                          <button
+                            type="button"
+                            class="btn btn-primary"
+                            id="delete_product"
+                            data-sku="{{product.sku}}"
+                            data-default="{{product.is_default}}"
+                            data-uniqueId="{{product.product.unique_id}}"
+                          >
+                            Yes
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="charts" style="justify-items: center">
+          <div class="charts-card" style="width: 70%">
+            <h2 class="chart-title">Top 5 Products</h2>
+            <div id="bar-chart"></div>
+          </div>
+        </div>
+      </main>
+      <!-- End Main -->
+    </div>
+
+    {{prod_1|json_script:'firstProd1'}} {{prod_2|json_script:'secondProd2'}}
+    {{prod_3|json_script:'thirdProd3'}} {{prod_4|json_script:'fourthProd4'}}
+    {{prod_5|json_script:'fifthProd5'}}
+    <!--     -->
+    {{rprod_1|json_script:'firstProd241'}}
+    {{rprod_2|json_script:'secondProd252'}}
+    {{rprod_3|json_script:'thirdProd263'}}
+    {{rprod_4|json_script:'fourthProd274'}}
+    {{rprod_5|json_script:'fifthProd285'}}
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- ApexCharts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/apexcharts/3.35.5/apexcharts.min.js"></script>
+    <!-- Custom JS -->
+    <script src="{% static 'js/dashboard_js.js' %}"></script>
+  </body>
+</html>

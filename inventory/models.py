@@ -3,7 +3,7 @@ from django.utils.text import slugify
 
 #მოკლედ ეს დაგვჭირდა იმიტომ რომ მინიმალური ფასის რაოდენობა მიგვეთითებინა
 from decimal import Decimal
-from django.core.validators import MinValueValidator
+from django.core.validators import MinValueValidator, MaxValueValidator
 
 #ეს არის ტექსტის თარგმნისთვის
 from django.utils.translation import gettext_lazy as _
@@ -97,7 +97,7 @@ class Product(models.Model):
 
 class ProductInventory(models.Model):
     sku = models.CharField(
-        max_length=20,
+        max_length=120,
     )
     product = models.ForeignKey(Product, related_name="product", on_delete=models.PROTECT)
     productAttributes = models.ManyToManyField(
@@ -147,6 +147,24 @@ class ProductAttributeValues(models.Model):
 
     class Meta:
         unique_together = (("attributevalues", "productinventory"),)
+
+class Review(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='reviews')
+    user = models.ForeignKey(Consumer, on_delete=models.CASCADE)
+    rating = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
+    comment = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Review for {self.product.name} by {self.user.username}"
+    
+class Rating(models.Model):
+    product = models.OneToOneField(Product, on_delete=models.CASCADE, related_name='rating')
+    average_rating = models.DecimalField(max_digits=3, decimal_places=2, default=0.00)
+    num_ratings = models.IntegerField(default=0)
+
+    def __str__(self):
+        return f"Rating for {self.product.name}"
 
 class Order(models.Model):
     costumer = models.ForeignKey(Consumer, on_delete=models.SET_NULL, null=True, blank=True)

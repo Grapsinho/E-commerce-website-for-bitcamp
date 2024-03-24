@@ -43,12 +43,12 @@ socket.onmessage = function (event) {
               display: flex;
               flex-direction: column;
           ">
-                
+
                 <span style="color: black;"> ${result.name} </span>
                 <span class="price" style="color: black;"> ${result.price}$ </span>
 
                 </span>
-                
+
                 </a>
             `;
 
@@ -79,7 +79,6 @@ searchInput.addEventListener("input", function () {
   clearTimeout(timeout);
   timeout = setTimeout(() => {
     let searchQuery = this.value;
-    console.log(searchQuery);
     socket.send(sanitizeInput(searchQuery));
   }, 1000);
 });

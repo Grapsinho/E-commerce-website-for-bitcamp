@@ -45,7 +45,7 @@ class Consumer(AbstractUser):
         return self.email
 
 class Vendor(Consumer):
-    shop_name = models.CharField(max_length=255)
+    shop_name = models.CharField(max_length=255, unique=True)
     description = models.TextField(blank=True)
     address = models.CharField(max_length=255, default='None')
 

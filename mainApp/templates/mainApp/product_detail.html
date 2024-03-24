@@ -2,14 +2,14 @@
 {{produ_name}} {% endblock %} {% block css %}
 <link
   rel="stylesheet"
-  href="{% static 'css/product_dtl1.css' %}"
+  href="{% static 'css/product_detel.css' %}"
   type="text/css"
   media="screen"
 />
 {% endblock %} {% block content %}
 
 <section class="main-section-productDtl">
-  <div class="container-fluid d-flex gap-3 res-cont">
+  <div class="container-fluid d-flex gap-3 res-cont mb-4">
     <div class="photo-border-width" style="width: 60%">
       <div
         class="photos border d-flex justify-content-center p-3 slider-container"
@@ -63,49 +63,49 @@
 
       <p class="code">code: <span class="code32">2314761823</span></p>
 
+      <div class="rating-stars"></div>
+
       <div
         class="filters d-flex gap-2"
         style="flex-wrap: wrap; flex-direction: column"
       >
-        {% for attribute, values in rec_data %}
-
+        {% for attribute, values in filter_data.items %}
         <div>
           <div
             class="d-flex gap-2"
             style="flex-wrap: wrap; flex-direction: column"
           >
-            {{attribute}}:
-
+            {{ attribute }}:
             <div class="d-flex gap-2">
               {% for value in values %}
-
               <div
                 class="collapse show filter-products-values"
-                id="collapseExample{{attribute}}"
-                data-filter="{{attribute}}"
-                data-value="{{value}}"
+                id="collapseExample{{ attribute }}"
+                data-filter="{{ attribute }}"
+                data-value="{{ value }}"
               >
                 <div class="card card-body mb-1 values-filter border-0 p-0">
                   <input
                     type="checkbox"
                     class="btn-check"
-                    id="btn-check-{{value}}"
+                    id="btn-check-{{ value }}"
                     autocomplete="off"
+                    data-attribute="{{ attribute }}"
+                    data-value="{{ value }}"
                   />
                   <label
                     class="btn btn-primary filter-value-sty"
-                    data-filter2="{{attribute}}"
                     for="btn-check"
-                    >{{value}}</label
+                    data-filter="{{ attribute }}"
+                    data-value="{{ value }}"
+                    >{{ value }}</label
                   >
                 </div>
               </div>
-
               {% endfor %}
             </div>
           </div>
         </div>
-
         {% endfor %}
       </div>
 
@@ -155,11 +155,43 @@
       </div>
     </div>
   </div>
+
+  <h2>Add a Review:</h2>
+  <div id="rating-stars">
+    <i class="far fa-star star" data-value="1"></i>
+    <i class="far fa-star star" data-value="2"></i>
+    <i class="far fa-star star" data-value="3"></i>
+    <i class="far fa-star star" data-value="4"></i>
+    <i class="far fa-star star" data-value="5"></i>
+  </div>
+  <form id="review-form" class="mb-4">
+    <input type="hidden" id="rating" name="rating" />
+    <textarea
+      id="comment"
+      name="comment"
+      placeholder="Write your comment"
+    ></textarea>
+    <button type="button" class="rating_review_btn">Submit</button>
+  </form>
+
+  <h2>Reviews:</h2>
+  <ul id="reviews-list" class="mb-4">
+    {% for review in reviews %}
+    <li>
+      <p>User: {{ review.user.username }}</p>
+      <p>Rating: {{ review.rating }}</p>
+      <p>Comment: {{ review.comment }}</p>
+    </li>
+    {% empty %}
+    <li>No reviews yet.</li>
+    {% endfor %}
+  </ul>
 </section>
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
+{{rec_data1|json_script:'attributes_values'}}
+{{most_important_attribute|json_script:'most_imp_attr'}}
+{{average_rating|json_script:'avg_rating'}} {{sku|json_script:'sku_for_prod'}}
+<!--  -->
 {% block scripts %}
-
-<script src="{% static 'js/product_dtl.js' %}"></script>
+<script src="{% static 'js/product_detel.js' %}"></script>
 {% endblock scripts %} {% endblock %}

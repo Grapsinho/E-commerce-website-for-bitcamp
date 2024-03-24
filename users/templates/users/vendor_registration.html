@@ -70,17 +70,20 @@
         const emailVal = email.value;
         const shop_nameVal = shop_name.value;
         const pass1Val = password1.value;
-        const pass2Val = password1.value;
+        const pass2Val = password2.value;
 
         if (!emailVal || !pass1Val || !pass2Val) {
           alert(
             "Please fill out all the fields!\n\n*Note: Passwords must be at least 8 characters long."
           );
           return false;
-        } else if (pass1Val !== pass2Val) {
+        }
+        if (pass1Val !== pass2Val) {
           alert("Passwords do not match!");
           return false;
-        } else if (pass1Val.length < 8) {
+        }
+
+        if (pass1Val.length < 8) {
           alert(
             "Password is too short!\n\n*Note: Password should be at least 8 characters long."
           );
@@ -100,9 +103,23 @@
           success: function (data) {
             window.location.href = `${location.protocol}//${location.host}/auth/login/`;
           },
-          error: function (error) {
-            console.error("Registration failed:", error.responseJSON[0]);
-            alert(`Error:\n ${error.responseText}`);
+          error: function (xhr, status, error) {
+            console.log(xhr);
+            // Handle error response from the backend
+            // console.error("Error sending data:", error.erro12r);
+            // // Optionally, you can display an error message to the user
+
+            try {
+              if (xhr.responseJSON.non_field_errors[0]) {
+                alert(`Error: ${xhr.responseJSON.non_field_errors[0]}`);
+              }
+            } catch (error) {
+              if (
+                xhr.responseJSON.error23 ==
+                "UNIQUE constraint failed: users_vendor.shop_name"
+              )
+                alert(`Error: That Shop Name Already Used`);
+            }
           },
         });
       });

@@ -100,12 +100,17 @@ class SignUpView_vendor(generics.GenericAPIView):
         data = request.data
         serializer = self.serializer_class(data=data)
 
-        if serializer.is_valid():
-            serializer.save()
+        try:
+            if serializer.is_valid():
+                serializer.save()
 
-            response = {"message": "Vendor Created", "data": serializer.data}
+                response = {"message": "Vendor Created", "data": serializer.data}
 
-            return Response(data=response, status=status.HTTP_201_CREATED)
+                return Response(data=response, status=status.HTTP_201_CREATED)
+            return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            context = {
+                "error23": str(e),
+            }
 
-        print(serializer.errors['non_field_errors'])
-        return Response(data=serializer.errors['non_field_errors'], status=status.HTTP_400_BAD_REQUEST)
+            return Response(data=context, status=status.HTTP_400_BAD_REQUEST)

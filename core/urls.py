@@ -13,6 +13,9 @@ urlpatterns = [
     # auth urls
     path('auth/', include('users.urls')),
 
+    # api urls
+    path('api/', include('api.urls')),
+
     #for development
     path("__debug__/", include(debug_toolbar.urls)),
 ]

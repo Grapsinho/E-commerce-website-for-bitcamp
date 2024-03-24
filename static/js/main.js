@@ -12,6 +12,8 @@ $(document).ready(function () {
 
   let filtersString_attr = JSON.stringify(attr_filter_arr);
 
+  let search_q = JSON.parse(document.getElementById("search_q").textContent);
+
   // Function to update the product list
   function updateProductList() {
     $.ajax({
@@ -22,6 +24,7 @@ $(document).ready(function () {
         "sort": sortOption, // Send the sorting option to the server
         "filters_cat": filtersString,
         "filters_attr": filtersString_attr,
+        "search_q": search_q,
       },
 
       success: function (data) {
@@ -30,9 +33,6 @@ $(document).ready(function () {
 
         // Clear the product list before appending new data
         $("#product_list").empty();
-        console.log($("#product_list"));
-
-        console.log(products);
 
         for (var i = 0; i < products.length; i++) {
           var product = products[i];

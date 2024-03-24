@@ -475,21 +475,28 @@
               contentType: false,
               data: formData,
               success: function (data) {
-                console.log(data);
-                if (!modalAdded) {
-                  $(".modal_container").css({
-                    "display": "grid",
-                  });
+                console.log(!data.message12521);
+                if (!data.message12521) {
+                  if (!modalAdded) {
+                    $(".modal_container").css({
+                      "display": "grid",
+                    });
 
-                  $(".modal_container").append(
-                    `
+                    $(".modal_container").append(
+                      `
                       <div class="modal12" style="text-align: center">
                         <h3 style="font-size: 1.4rem">Your Product Is Created</h3>
                         <a href="${location.protocol}//${location.host}/product_detail/${data.product.product_id}/" class="btn155">See Product</a>
                       </div>
                       `
-                  );
+                    );
 
+                    modalAdded = true;
+                  }
+                } else {
+                  if (!modalAdded) {
+                    alert(data.message12521);
+                  }
                   modalAdded = true;
                 }
               },
@@ -526,21 +533,28 @@
                         contentType: false,
                         data: formData,
                         success: function (data) {
-                          console.log(data);
-                          if (!modalAdded) {
-                            $(".modal_container").css({
-                              "display": "grid",
-                            });
+                          console.log(!data.message12521);
+                          if (!data.message12521) {
+                            if (!modalAdded) {
+                              $(".modal_container").css({
+                                "display": "grid",
+                              });
 
-                            $(".modal_container").append(
-                              `
-                      <div class="modal12" style="text-align: center">
-                        <h3 style="font-size: 1.4rem">Your Product Is Created</h3>
-                        <a href="${location.protocol}//${location.host}/product_detail/${data.product.product_id}/" class="btn155">See Product</a>
-                      </div>
-                      `
-                            );
+                              $(".modal_container").append(
+                                `
+                                  <div class="modal12" style="text-align: center">
+                                    <h3 style="font-size: 1.4rem">Your Product Is Created</h3>
+                                    <a href="${location.protocol}//${location.host}/product_detail/${data.product.product_id}/" class="btn155">See Product</a>
+                                  </div>
+                                `
+                              );
 
+                              modalAdded = true;
+                            }
+                          } else {
+                            if (!modalAdded) {
+                              alert(data.message12521);
+                            }
                             modalAdded = true;
                           }
                         },
@@ -767,6 +781,7 @@
                 let everything_fine1 = false;
                 let everything_fine2 = false;
                 let everything_fine3 = false;
+                let everything_fine4 = false;
 
                 $(".necessary_form").each(function (index, element2) {
                   if ($(element2).val() == "") {
@@ -781,7 +796,7 @@
                 }
 
                 $(".product_price").each(function (index, element21) {
-                  if ($(element21).val() <= 0) {
+                  if (parseInt($(element21).val()) <= 0) {
                     $(".price_error").each(function (index, element22) {
                       $(element22).text("Price Should Be above 0");
                     });
@@ -791,9 +806,32 @@
                   }
                 });
 
+                let prd_sku = document.querySelectorAll(".product_sku");
+
+                console.log(prd_sku);
+
+                for (let index = 0; index < prd_sku.length; index++) {
+                  const element = prd_sku[index];
+
+                  if (index != 0 && prd_sku[index - 1].value == element.value) {
+                    console.log(prd_sku[index - 1]);
+                    console.log(prd_sku[index - 1].value, element.value);
+
+                    alert(
+                      `Your Sub-products have same sku, please change it: ${element.value}`
+                    );
+                    everything_fine4 = false;
+                  } else {
+                    everything_fine4 = true;
+                    console.log(index);
+                  }
+                }
+
+                console.log(everything_fine4);
+
                 $(".product_stock").each(function (index, element23) {
-                  if ($(element23).val() <= 0) {
-                    $(".price_error").each(function (index, element24) {
+                  if (parseInt($(element23).val()) <= 0) {
+                    $(".stock_error").each(function (index, element24) {
                       $(element24).text("Stock Should Be above 0");
                     });
                     everything_fine2 = false;
@@ -872,10 +910,12 @@
                     everything_fine &&
                     everything_fine1 &&
                     everything_fine2 &&
-                    everything_fine3
+                    everything_fine3 &&
+                    everything_fine4
                   ) {
-                    formData.append("image", product_image[iFor_cont].files[0]);
                     const id = iFor_cont;
+
+                    formData.append("image", product_image[iFor_cont].files[0]);
 
                     sub_prod_obj = {
                       [`product_id_${id}`]: {
@@ -912,16 +952,14 @@
                     formData.append("sub_prod_obj", JSON.stringify(arrt435));
                     formData.append("lent", $(".sub_prod1").length);
                   }
-
-                  console.log(product_obj, "magari");
-                  console.log(sub_prod_obj, "magari2");
                 }
 
                 if (
                   everything_fine &&
                   everything_fine1 &&
                   everything_fine2 &&
-                  everything_fine3
+                  everything_fine3 &&
+                  everything_fine4
                 ) {
                   $.ajax({
                     url: `${location.protocol}//${location.host}/ajax_viewFor_CreteProducts/`,
@@ -934,21 +972,28 @@
                     contentType: false,
                     data: formData,
                     success: function (data) {
-                      console.log(data);
-                      if (!modalAdded) {
-                        $(".modal_container").css({
-                          "display": "grid",
-                        });
+                      console.log(!data.message12521);
+                      if (!data.message12521) {
+                        if (!modalAdded) {
+                          $(".modal_container").css({
+                            "display": "grid",
+                          });
 
-                        $(".modal_container").append(
-                          `
-                                    <div class="modal12" style="text-align: center">
-                                      <h3 style="font-size: 1.4rem">Your Product Is Created</h3>
-                                      <a href="${location.protocol}//${location.host}/product_detail/${data.product.product_id}/" class="btn155">See Product</a>
-                                    </div>
-                                    `
-                        );
+                          $(".modal_container").append(
+                            `
+                                  <div class="modal12" style="text-align: center">
+                                    <h3 style="font-size: 1.4rem">Your Product Is Created</h3>
+                                    <a href="${location.protocol}//${location.host}/product_detail/${data.product.product_id}/" class="btn155">See Product</a>
+                                  </div>
+                                `
+                          );
 
+                          modalAdded = true;
+                        }
+                      } else {
+                        if (!modalAdded) {
+                          alert(data.message12521);
+                        }
                         modalAdded = true;
                       }
                     },
@@ -985,22 +1030,28 @@
                               contentType: false,
                               data: formData,
                               success: function (data) {
-                                console.log(data);
+                                console.log(!data.message12521);
+                                if (!data.message12521) {
+                                  if (!modalAdded) {
+                                    $(".modal_container").css({
+                                      "display": "grid",
+                                    });
 
-                                if (!modalAdded) {
-                                  $(".modal_container").css({
-                                    "display": "grid",
-                                  });
+                                    $(".modal_container").append(
+                                      `
+                                  <div class="modal12" style="text-align: center">
+                                    <h3 style="font-size: 1.4rem">Your Product Is Created</h3>
+                                    <a href="${location.protocol}//${location.host}/product_detail/${data.product.product_id}/" class="btn155">See Product</a>
+                                  </div>
+                                `
+                                    );
 
-                                  $(".modal_container").append(
-                                    `
-                                      <div class="modal12" style="text-align: center">
-                                        <h3 style="font-size: 1.4rem">Your Product Is Created</h3>
-                                        <a href="${location.protocol}//${location.host}/product_detail/${data.product.product_id}/" class="btn155">See Product</a>
-                                      </div>
-                                    `
-                                  );
-
+                                    modalAdded = true;
+                                  }
+                                } else {
+                                  if (!modalAdded) {
+                                    alert(data.message12521);
+                                  }
                                   modalAdded = true;
                                 }
                               },
