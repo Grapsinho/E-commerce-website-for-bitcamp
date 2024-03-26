@@ -138,33 +138,15 @@ def product_detail(request, sku):
         for i in product:
             produ_name = i.product.name
 
-        # Prepare filter data for all attributes
-        filter_data = {}
-        attribute_scores = {}
-
-        for p in product:
-            attributes = p.productattributevaluess.values_list('attributevalues__attribute__name', flat=True).distinct()
-
-            for attr in attributes:
-                attribute_values = p.productattributevaluess.filter(attributevalues__attribute__name=attr).values_list('attributevalues__value', flat=True)
-                filter_data.setdefault(attr, set()).update(attribute_values)
-                attribute_scores[attr] = attribute_scores.get(attr, 0) + len(attribute_values)
-
-        # Step 3: Evaluate attribute importance
-        most_important_attribute = max(attribute_scores, key=attribute_scores.get)
-            
         reorganized_data1 = {}
             
         # Identify the default product
-        default_product = product.filter(is_default=True).values('productattributevaluess__attributevalues__attribute__name', "productattributevaluess__attributevalues__value")
+        default_product = product.values('productattributevaluess__attributevalues__attribute__name', "productattributevaluess__attributevalues__value")
             
         for i in default_product:
             attribute_name = i["productattributevaluess__attributevalues__attribute__name"]
             attribute_value = i["productattributevaluess__attributevalues__value"]
             reorganized_data1[attribute_name] = [attribute_value]
-
-        print(filter_data, 'filter_data')
-        print(most_important_attribute)
 
         product32 = product[0].product
 
@@ -173,16 +155,21 @@ def product_detail(request, sku):
         average_rating = rating_instance.average_rating
         num_ratings = rating_instance.num_ratings
 
+        values = []
+
+        for attr, values12 in reorganized_data1.items():
+            for j in values12:
+                values.append(j)
+        
         context = {
-                "vendor": vendor,
-                "product": product,
-                "filter_data": filter_data,
-                "produ_name": produ_name,
-                "rec_data1": reorganized_data1,
-                'most_important_attribute': most_important_attribute,
-                'sku': sku,
-                'reviews': reviews, 'average_rating': average_rating, 'num_ratings': num_ratings
-            }
+            "product": product,
+            "vendor": vendor,
+            "produ_name": produ_name,
+            'sku': sku,
+            "rec_data": values, 
+            "rec_data2": reorganized_data1.items(), 
+            'reviews': reviews, 'average_rating': average_rating, 'num_ratings': num_ratings
+        }
         return render(request, 'mainApp/product_detail.html', context)
     except Exception as e:
             product = ProductInventory.objects.filter(product__unique_id=sku)
@@ -192,33 +179,15 @@ def product_detail(request, sku):
             for i in product:
                 produ_name = i.product.name
 
-            # Prepare filter data for all attributes
-            filter_data = {}
-            attribute_scores = {}
-
-            for p in product:
-                attributes = p.productattributevaluess.values_list('attributevalues__attribute__name', flat=True).distinct()
-
-                for attr in attributes:
-                    attribute_values = p.productattributevaluess.filter(attributevalues__attribute__name=attr).values_list('attributevalues__value', flat=True)
-                    filter_data.setdefault(attr, set()).update(attribute_values)
-                    attribute_scores[attr] = attribute_scores.get(attr, 0) + len(attribute_values)
-
-            # Step 3: Evaluate attribute importance
-            most_important_attribute = max(attribute_scores, key=attribute_scores.get)
-            
             reorganized_data1 = {}
-            
+                
             # Identify the default product
-            default_product = product.filter(is_default=True).values('productattributevaluess__attributevalues__attribute__name', "productattributevaluess__attributevalues__value")
-            
+            default_product = product.values('productattributevaluess__attributevalues__attribute__name', "productattributevaluess__attributevalues__value")
+                
             for i in default_product:
                 attribute_name = i["productattributevaluess__attributevalues__attribute__name"]
                 attribute_value = i["productattributevaluess__attributevalues__value"]
                 reorganized_data1[attribute_name] = [attribute_value]
-
-            print(filter_data, 'filter_data')
-            print(most_important_attribute)
 
             product32 = product[0].product
 
@@ -227,13 +196,19 @@ def product_detail(request, sku):
             average_rating = rating_instance.average_rating
             num_ratings = rating_instance.num_ratings
 
+            values = []
+
+            for attr, values12 in reorganized_data1.items():
+                for j in values12:
+                    values.append(j)
+            
             context = {
                 "product": product,
-                "filter_data": filter_data,
+                "vendor": vendor,
                 "produ_name": produ_name,
-                "rec_data1": reorganized_data1,
-                'most_important_attribute': most_important_attribute,
                 'sku': sku,
+                "rec_data": values, 
+                "rec_data2": reorganized_data1.items(), 
                 'reviews': reviews, 'average_rating': average_rating, 'num_ratings': num_ratings
             }
             return render(request, 'mainApp/product_detail.html', context)
@@ -269,91 +244,34 @@ def dashboard(request, sku):
 
 def filter_sub_products_forproduct_detail(request):
     if request.method == 'GET':
-        filters = request.GET.get('filters_data')
-        sku_for_prod = request.GET.get('sku_for_prod')
-        filter2 = json.loads(filters)
+        sku = request.GET.get('sku_for_prod')
 
-        print(filter2)
+        product = ProductInventory.objects.get(sku=sku)
 
-        filtered_products = None
+        reorganized_data1 = {}
 
-        if len(filter2) > 1:
-            filtered_products = ProductInventory.objects.filter(product__unique_id=sku_for_prod,productattributevaluess__attributevalues__value=filter2[1])
-        else:
-            filtered_products = ProductInventory.objects.filter(product__unique_id=sku_for_prod,productattributevaluess__attributevalues__value=filter2[0])
-        
-        # Implement your filtering logic here based on the filters received
-        # Example: filtered_products = Product.objects.filter(**filters)
+        attribute_values = product.productattributevaluess.all().distinct()
+                
+        # Loop through each attribute value and print its name and value
+        for attribute_value in attribute_values:
+            # Check if the attribute name already exists in the reorganized data
+            if attribute_value.attributevalues.attribute.name in reorganized_data1:
+                if attribute_value.attributevalues.value not in reorganized_data1[attribute_value.attributevalues.attribute.name]:
+                    # If it's not in the list, append it
+                    reorganized_data1[attribute_value.attributevalues.attribute.name].append(attribute_value.attributevalues.value)
+            else:
+                # If it doesn't exist, create a new list with the value
+                reorganized_data1[attribute_value.attributevalues.attribute.name] = [attribute_value.attributevalues.value]
 
-        most_important_attribute = ''
-
-        if len(filtered_products) == 1:
-            l1 = list()
-        
-            for ii in filtered_products[0].productattributevaluess.all().values('attributevalues__value'):
-                l1.append(ii['attributevalues__value'])
-            context = {
-                'sku': filtered_products[0].sku,
-                'img_url': filtered_products[0].img_url.url,
-                'price': filtered_products[0].retail_price,
-                'desc': filtered_products[0].product.description,
-                'name': filtered_products[0].product.name,
-                'stock': filtered_products[0].stock,
-                'values': l1
-            }
-        elif len(filtered_products) > 1:  
-            l1 = list()
-
-            all_attributes = set()
-            for p in filtered_products:
-                attributes = p.productattributevaluess.values_list('attributevalues__attribute__name', flat=True)
-                all_attributes.update(attributes)
-
-            # Prepare filter data for all attributes
-            filter_data = {}
-            for attr in all_attributes:
-                values = set()
-                for p in filtered_products:
-                    attribute_values = p.productattributevaluess.filter(attributevalues__attribute__name=attr).values_list('attributevalues__value', flat=True)
-                    values.update(attribute_values)
-                    l1.append(attribute_values[0])
-                filter_data[attr] = values
-
-            # Step 2: Evaluate attribute importance
-            attribute_scores = {}
-            for attribute, values in filter_data.items():
-                print(attribute, values)
-                attribute_scores[attribute] = len(values)  # Use the number of unique values as the score
-
-            # Step 3: Select the most important attribute
-            most_important_attribute = max(attribute_scores, key=attribute_scores.get)
-
-            print(most_important_attribute, 'rameeee')
-
-            print(attribute_scores, 'rameeee')
-            
-            if (len(filter2) > 1):
-                filtered_products = filtered_products.filter(productattributevaluess__attributevalues__value=filter2[0])
-
-            l13 = list()
-        
-            for ii in filtered_products[0].productattributevaluess.all().values('attributevalues__value'):
-                l13.append(ii['attributevalues__value'])
-
-            context = {
-                'sku': filtered_products[0].sku,
-                'img_url': filtered_products[0].img_url.url,
-                'price': filtered_products[0].retail_price,
-                'desc': filtered_products[0].product.description,
-                'stock': filtered_products[0].stock,
-                'name': filtered_products[0].product.name,
-                "most_important_attribute1": most_important_attribute,
-                'values': l1,
-                'values_for_current_item': l13
-            }
-
-        else:
-            print('error')
+        context = {
+            'name':  product.product.name,
+            'img_url': product.img_url.url,
+            'price': product.retail_price,
+            "desc": product.product.description,
+            'stock': product.stock,
+            'sku': product.sku,
+            'rec_data': reorganized_data1
+        }
 
         # Return the filtered products as HTML response
         return JsonResponse(context)
@@ -475,10 +393,7 @@ def ajax_viewFor_CreteProducts(request):
                 sub_category = None
                 product = None
 
-                if lent == 1: 
-                    print('magariaaa')                                   
-                    print(sub_product_data['product_id_1']['product_sku']+f'-{user}')
-
+                if int(lent) == 1:                                  
                     try:
                         check_sku = ProductInventory.objects.get(sku=sub_product_data['product_id_1']['product_sku']+f'-{user}')
 
@@ -501,7 +416,6 @@ def ajax_viewFor_CreteProducts(request):
                             for j in sub_product_data[i_for_product_id].keys():
                                 if int(j.split(sep="_")[2]) == i_for_product_id:
 
-                                    print(sub_product_data[i_for_product_id][f'product_id_{i_for_product_id}']['product_sku']+f'-{user}')
                                     check_sku = ProductInventory.objects.get(sku=sub_product_data[i_for_product_id][f'product_id_{i_for_product_id}']['product_sku']+f'-{user}')
 
                                     if check_sku:
@@ -518,12 +432,12 @@ def ajax_viewFor_CreteProducts(request):
 
                         fine2 = True
 
-                if lent == 1 and fine1:
+                if int(lent) == 1 and fine1:
                         request.FILES.get('image').name = sub_product_data['product_id_1']['product_sku'] + request.FILES.get('image').name
 
                         sub_product = ProductInventory.objects.get_or_create(
                             sku=sub_product_data['product_id_1']['product_sku']+f'-{user}',
-                            retail_price=int(sub_product_data['product_id_1']['product_price']),
+                            retail_price=float(sub_product_data['product_id_1']['product_price']),
                             is_default=True,
                             img_url=request.FILES.get('image'),
                             stock=int(sub_product_data['product_id_1']['product_stock']),
@@ -558,7 +472,7 @@ def ajax_viewFor_CreteProducts(request):
 
                                 sub_product = ProductInventory.objects.get_or_create(
                                     sku=sub_product_data[i_for_product_id][f'product_id_{i_for_product_id}']['product_sku']+f'-{user}',
-                                    retail_price=int(sub_product_data[i_for_product_id][f'product_id_{i_for_product_id}']['product_price']),
+                                    retail_price=float(sub_product_data[i_for_product_id][f'product_id_{i_for_product_id}']['product_price']),
                                     is_default=sub_product_data[i_for_product_id][f'product_id_{i_for_product_id}']['form_check_input'],
                                     img_url=request.FILES.getlist('image')[i_for_product_id],
                                     product=product[0],
@@ -652,11 +566,13 @@ def deleteProduct(request):
                     product = Product.objects.get(unique_id=uniqueId)
                     # Find the default sub-product associated with the default product
                     default_sub_product = ProductInventory.objects.filter(product=product, is_default=True).first()
+
                     if default_sub_product:
                         # Prepare the list of alternative sub-products
                         alternative_sub_products = ProductInventory.objects.filter(product=product, is_default=False)
 
                         if  len(alternative_sub_products) == 0:
+                            print('rame')
                             # Proceed with deleting the product
                             ProductAttributeValues.objects.filter(productinventory=default_sub_product).delete()
                             
@@ -695,7 +611,7 @@ def deleteProduct(request):
                     return JsonResponse({'success': 'Product deleted successfully'})
             
             except jwt.ExpiredSignatureError:
-                return JsonResponse({'error': 'Token has expired'}, status=401)
+                return JsonResponse({'error25': 'Token has expired'}, status=401)
             except jwt.InvalidTokenError:
                 return JsonResponse({'error': 'Invalid token'}, status=401)
             except Exception as e:
@@ -731,3 +647,274 @@ def delete_default_product(request):
         return JsonResponse({'success': 'Product deleted successfully'})
     else:
         return JsonResponse({'error': 'Invalid request method'}, status=400)
+
+def update_product(request, sku):
+    vendor = Vendor.objects.get(email=request.user)
+
+    product = Product.objects.get(unique_id = sku)
+
+    sub_products = ProductInventory.objects.filter(product=product).order_by('created_at')
+
+    attr_dict = {}
+
+    # Loop through each ProductInventory instance
+    for product_inventory in sub_products:
+        # Retrieve all associated attribute values for this ProductInventory instance
+        attribute_values = product_inventory.productattributevaluess.all().distinct()
+
+        attr_dict[product_inventory.pk] = {}
+                
+        # Loop through each attribute value and print its name and value
+        for attribute_value in attribute_values:
+            # Check if the attribute name already exists in the reorganized data
+            if attribute_value.attributevalues.attribute.name in attr_dict:
+                if attribute_value.attributevalues.value not in attr_dict[product_inventory.pk][attribute_value.attributevalues.attribute.name]:
+                    # If it's not in the list, append it
+                    attr_dict[product_inventory.pk][attribute_value.attributevalues.attribute.name].append(attribute_value.attributevalues.value)
+            else:
+                # If it doesn't exist, create a new list with the value
+                attr_dict[product_inventory.pk][attribute_value.attributevalues.attribute.name] = [attribute_value.attributevalues.value]
+
+    category = Category.objects.all()
+    sub_category = Sub_Category.objects.all()
+
+    categoryArr = []
+    subCategoryArr = []
+
+    for i in category:
+        categoryArr.append(i.name)
+    
+    for k in sub_category:
+        subCategoryArr.append(k.name)
+
+    context = {
+        'vendor': vendor,
+        "category": categoryArr,
+        "subCategory": subCategoryArr,
+        'product': product,
+        'sku': sku,
+        'sub_products': sub_products,
+        'attr_dict': attr_dict.items(),
+        'sub_length': len(sub_products),
+    }
+
+    return render(request, 'mainApp/update_product.html', context)
+
+
+def update_product_ajax(request):
+    if request.method == 'POST':
+        sub_prod_obj_str = request.POST.get('sub_prod_obj')
+        product_obj_str = request.POST.get('product_obj')
+        unique_id_prod = request.POST.get('unique_id_prod')
+        sub_product_data = json.loads(sub_prod_obj_str)
+        product_data = json.loads(product_obj_str)
+
+        user = Vendor.objects.get(email=request.user)
+
+        print(sub_product_data)
+
+        main_product = None
+        main_product2 = Product.objects.get(unique_id=unique_id_prod)
+
+        lent = 1
+        fine1 = False
+        fine2 = False
+                
+        if request.POST.get('lent'):
+            lent = request.POST.get('lent')
+        else:
+            lent = 1
+        
+        # checking if SKU is already used by another product of the same vendor
+        if int(lent) == 1:
+            main_product = ProductInventory.objects.get(product__unique_id=unique_id_prod)
+            try:
+                if main_product.sku == sub_product_data[0]['product_id_0']['product_sku']+f'-{user}':
+                    category = Category.objects.get_or_create(name=product_data['category'].title())
+                    sub_category = Sub_Category.objects.get_or_create(name=product_data['product_sub_category'].title(), parent=category[0])
+                    main_product2.category = sub_category[0]
+                    main_product2.name = product_data["product_name"]
+                    main_product2.description = product_data["product_desc"]
+
+                    main_product2.unique_id = main_product2.slug + f"-{main_product2.pk}"
+                    main_product2.save()
+
+                    fine1 = True
+                else:
+                    check_sku = ProductInventory.objects.get(sku=sub_product_data['product_id_1']['product_sku']+f'-{user}')
+
+                    if check_sku:
+                        fine1 = False
+                        return JsonResponse({'message12521': f"please choose different SKU, because one of your product already have it '{sub_product_data['product_id_1']['product_sku']}' "})
+
+            except:
+                category = Category.objects.get_or_create(name=product_data['category'].title())
+                sub_category = Sub_Category.objects.get_or_create(name=product_data['product_sub_category'].title(), parent=category[0])
+
+                main_product2.category = sub_category[0]
+                main_product2.name = product_data["product_name"]
+                main_product2.description = product_data["product_desc"]
+
+                main_product2.unique_id = main_product2.slug + f"-{main_product2.pk}"
+                main_product2.save()
+            
+                fine1 = True
+
+        # same here
+        if int(lent) > 1:
+            main_product = ProductInventory.objects.filter(product__unique_id=unique_id_prod)
+            try:
+                for i_for_product_id in range(int(lent)):
+                    for j in sub_product_data[i_for_product_id].keys():
+                        if int(j.split(sep="_")[2]) == i_for_product_id:
+
+                            if main_product[i_for_product_id].sku == sub_product_data[i_for_product_id][f'product_id_{i_for_product_id}']['product_sku']+f'-{user}':
+                                category = Category.objects.get_or_create(name=product_data['category'].title())
+                                sub_category = Sub_Category.objects.get_or_create(name=product_data['product_sub_category'].title(), parent=category[0])
+
+                                main_product2.category = sub_category[0]
+                                main_product2.name = product_data["product_name"]
+                                main_product2.description = product_data["product_desc"]
+
+                                if main_product2:
+                                    main_product2.unique_id = main_product2.slug + f"-{main_product2.pk}"
+                                    main_product2.save()
+
+                                fine2 = True
+                            else:
+                                check_sku = ProductInventory.objects.get(sku=sub_product_data[i_for_product_id][f'product_id_{i_for_product_id}']['product_sku']+f'-{user}')
+
+                                if check_sku:
+                                    fine2 = False
+                                    return JsonResponse({'message12521': f"please choose different SKU, because one of your product already have it '{sub_product_data[i_for_product_id][f'product_id_{i_for_product_id}']['product_sku']}' "})
+
+            except:
+                category = Category.objects.get_or_create(name=product_data['category'].title())
+                sub_category = Sub_Category.objects.get_or_create(name=product_data['product_sub_category'].title(), parent=category[0])
+                main_product2.category = sub_category[0]
+                main_product2.name = product_data["product_name"]
+                main_product2.description = product_data["product_desc"]
+
+                if main_product2:
+                    main_product2.unique_id = main_product2.slug + f"-{main_product2.pk}"
+                    main_product2.save()
+
+                fine2 = True
+
+
+        # updating product
+        if int(lent) == 1 and fine1:
+                main_product = ProductInventory.objects.get(product__unique_id=unique_id_prod)
+                if request.FILES.get('image'):
+                    # Retrieve the path of the photo associated with the sub-product
+                    photo_path = main_product.img_url.url
+
+                    # Delete the photo file from the storage
+                    if os.path.exists(f'static{photo_path}'):
+                        os.remove(f'static{photo_path}')
+
+                    image_file = request.FILES.get('image')
+                    # Rename image file if necessary
+                    image_file.name = sub_product_data[0]['product_id_0']['product_sku'] + image_file.name
+                    main_product.img_url = image_file
+                else:
+                    print('No image file provided')
+
+                main_product.sku = sub_product_data[0]['product_id_0']['product_sku']+f'-{user}'
+                main_product.retail_price = float(sub_product_data[0]['product_id_0']['product_price'])
+                main_product.is_default = sub_product_data[0]['product_id_0']['form_check_input']
+                main_product.stock = sub_product_data[0]['product_id_0']['product_stock']
+                main_product.product=main_product2
+
+                # Retrieve the product inventory object
+                product_inventory = main_product
+
+                # Get the old attribute values associated with the product inventory
+                old_attribute_values = product_inventory.productattributevaluess.all()
+
+                # Delete the old attribute values
+                old_attribute_values.delete()
+
+                # Update attributes
+                for key, value in sub_product_data[0]['product_id_0'].items():
+                    if key.startswith('attr'):
+                        attr_name = key.split('_')[1]
+                        attr_value = value.title()
+                        # Update or create the attribute value
+                        attr = ProductAttribute.objects.get_or_create(name=attr_name)[0]
+                        attr_value_instance, _ = ProductAttributeValue.objects.get_or_create(attribute=attr, value=attr_value)
+                        # Create a new ProductAttributeValues instance
+                        ProductAttributeValues.objects.create(attributevalues=attr_value_instance, productinventory=product_inventory)
+
+                # Save changes to the product inventory
+                product_inventory.save()
+
+        # Updating sub-products
+        elif int(lent) > 1 and fine2:
+            main_products = ProductInventory.objects.filter(product__unique_id=unique_id_prod)
+
+            for i_for_product_id in range(int(lent)):
+                sub_product = main_products[i_for_product_id]
+
+                # Update image
+                if request.FILES.get(f'image-{i_for_product_id}', None):
+                    image_file = request.FILES.get(f'image-{i_for_product_id}')
+
+                    # Delete existing image if it exists
+                    if sub_product.img_url:
+                        if os.path.exists(sub_product.img_url.path):
+                            os.remove(sub_product.img_url.path)
+
+                    # Save new image
+                    image_file.name = sub_product_data[i_for_product_id][f'product_id_{i_for_product_id}']['product_sku'] + image_file.name
+                    sub_product.img_url = image_file
+                else:
+                    print('No image file provided')
+
+                # Update other fields
+                sub_product.sku = sub_product_data[i_for_product_id][f'product_id_{i_for_product_id}']['product_sku']+f'-{user}'
+                sub_product.retail_price = float(sub_product_data[i_for_product_id][f'product_id_{i_for_product_id}']['product_price'])
+                sub_product.is_default = sub_product_data[i_for_product_id][f'product_id_{i_for_product_id}']['form_check_input']
+                sub_product.stock = int(sub_product_data[i_for_product_id][f'product_id_{i_for_product_id}']['product_stock'])
+                sub_product.product = main_product2
+
+                # Retrieve the product inventory object
+                product_inventory = main_product[i_for_product_id]
+
+                # Get the old attribute values associated with the product inventory
+                old_attribute_values = product_inventory.productattributevaluess.all()
+
+                # Delete the old attribute values
+                old_attribute_values.delete()
+
+                # Update attributes
+                for key, value in sub_product_data[i_for_product_id][f'product_id_{i_for_product_id}'].items():
+                    if key.startswith('attr'):
+                        attr_name = key.split('_')[1]
+                        attr_value = value.title()
+                        # Update or create the attribute value
+                        attr = ProductAttribute.objects.get_or_create(name=attr_name)[0]
+                        attr_value_instance, _ = ProductAttributeValue.objects.get_or_create(attribute=attr, value=attr_value)
+                        # Create a new ProductAttributeValues instance
+                        ProductAttributeValues.objects.create(attributevalues=attr_value_instance, productinventory=product_inventory)
+
+                # Save changes to the product inventory
+                product_inventory.save()
+
+
+        if int(lent) == 1:
+            # For demonstration purposes, let's just return a simple response
+            response_data = {'product': {
+                "product_id": main_product.product.unique_id,
+            },
+                "message": "Product Created Successfully"
+            }
+        elif int(lent) > 1:
+            response_data = {'product': {
+                "product_id": main_product[0].product.unique_id,
+            },
+                "message": "Product Created Successfully"
+            }
+
+        return JsonResponse(response_data)
+    

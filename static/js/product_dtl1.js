@@ -20,120 +20,35 @@ $(document).ready(function () {
   }
   var csrftoken = getCookie("csrftoken");
 
-  var mainImage = $(".main-image");
-  var thumbnails = $(".thumbnail");
-
-  const attributes_values_const = JSON.parse(
-    document.getElementById("attributes_values").textContent
-  );
-
-  const most_imp_attr = JSON.parse(
-    document.getElementById("most_imp_attr").textContent
-  );
-
-  let most_imp_attr2 = "";
-  let current_filter = "";
-
-  const sku_for_prod = JSON.parse(
-    document.getElementById("sku_for_prod").textContent
-  );
-
-  let filters = [];
-
-  if (attributes_values_const && most_imp_attr2 == "") {
-    const filter_div54 = document.querySelectorAll(".filter-products-values");
-
-    filter_div54.forEach((element) => {
-      if (element.dataset.filter == most_imp_attr) {
-        console.log(element.dataset.filter, most_imp_attr);
-        if (
-          attributes_values_const[element.dataset.filter] &&
-          attributes_values_const[element.dataset.filter][0] ===
-            element.dataset.value
-        ) {
-          element.childNodes.item(1).childNodes.item(3).classList.add("active");
-          filters.push(attributes_values_const[element.dataset.filter][0]);
-        }
-      }
-
-      if (
-        attributes_values_const[element.dataset.filter][0] !==
-          element.dataset.value &&
-        element.dataset.filter !== most_imp_attr
-      ) {
-        element.childNodes
-          .item(1)
-          .childNodes.item(3)
-          .classList.add("no_in_stock");
-      }
-    });
-  }
-
-  // Function to remove "active" class from other elements with most_imp_attr
-  function removeActiveFromOthers() {
-    const filter_div = document.querySelectorAll(".filter-products-values");
-    filter_div.forEach((element) => {
-      if (element.dataset.filter === most_imp_attr) {
-        element.childNodes
-          .item(1)
-          .childNodes.item(3)
-          .classList.remove("active");
-      }
-    });
-  }
-
-  let res = JSON.stringify(filters);
+  let sku_for_prod = document.querySelector(".card1.active").dataset.sku;
+  const id_for_prod = document.getElementById("sku_for_prod").textContent;
 
   function updateFilter() {
     $.ajax({
       type: "GET",
       url: "/filter_sub_products_forproduct_detail/",
       data: {
-        "filters_data": res,
         "sku_for_prod": sku_for_prod,
       },
       success: function (response) {
         var products = response;
-        var values = products.values;
+        let attrs = products.rec_data;
 
-        if (
-          values.length > 2 &&
-          products.most_important_attribute1 !== most_imp_attr
-        ) {
-          most_imp_attr2 = products.most_important_attribute1;
-          current_filter = products.values_for_current_item[0];
+        $(".attrs_and_values").text(``);
+
+        for (const key in attrs) {
+          const element12 = attrs[key];
+
+          $(".attrs_and_values").append(`
+            
+              <li class="list-group-item attr_values">
+                ${key}:
+                <span data-attrValue="${element12[0]}">${element12[0]}</span>
+              </li> 
+            
+            `);
         }
 
-        for (let index = 0; index < $(".filter-value-sty").length; index++) {
-          const element = $(".filter-value-sty")[index];
-
-          if (values.includes(element.innerText.trim())) {
-            // თუ ველიუებში არის ისეთი ელემენტი რომელიც არის ამ დივებში ჩვენ მას გადავცემთ
-            // აქტივ კლასს და თუ ელემენტს ანუ მაგალითად size ქონდა ნო ინ სტოკ მაშინ ვუთიშავთ
-            element.classList.add("active");
-            if (element.classList.contains("no_in_stock")) {
-              element.classList.remove("no_in_stock");
-            }
-
-            if (
-              values.length > 2 &&
-              element.dataset.filter == products.most_important_attribute1 &&
-              element.dataset.value !== products.values_for_current_item[1]
-            ) {
-              element.classList.remove("active");
-            }
-          }
-
-          if (
-            !values.includes(element.innerText.trim()) &&
-            element.dataset.filter !== products.most_important_attribute1 &&
-            element.dataset.filter !== most_imp_attr
-          ) {
-            element.classList.add("no_in_stock");
-          }
-        }
-
-        // Clear the product list before appending new data
         $(".name").empty();
         $(".price").empty();
         $(".description").empty();
@@ -161,6 +76,27 @@ $(document).ready(function () {
     });
   }
 
+  const card = document.querySelectorAll(".card1");
+
+  card.forEach((element) => {
+    element.addEventListener("click", () => {
+      sku_for_prod = element.dataset.sku;
+
+      card.forEach((element5) => {
+        if (element5.classList.contains("active")) {
+          element5.classList.remove("active");
+        }
+      });
+
+      element.classList.add("active");
+
+      updateFilter();
+    });
+  });
+
+  var mainImage = $(".main-image");
+  var thumbnails = $(".thumbnail");
+
   // Add click event to thumbnails
   thumbnails.click(function () {
     // Change the source of the main image to the clicked thumbnail's source
@@ -179,50 +115,6 @@ $(document).ready(function () {
     }
   });
 
-  const filter_div = document.querySelectorAll(".filter-products-values");
-
-  filter_div.forEach((element, index) => {
-    element.addEventListener("click", () => {
-      let attr = element.dataset.filter;
-      let value_attr = element.dataset.value;
-
-      if (attr == most_imp_attr && most_imp_attr !== most_imp_attr2) {
-        filters = [];
-
-        filters.push(value_attr);
-
-        removeActiveFromOthers();
-
-        element.childNodes.item(1).childNodes.item(3).classList.add("active");
-
-        console.log(filters);
-
-        res = JSON.stringify(filters);
-
-        updateFilter();
-      }
-
-      if (attr == most_imp_attr2 && most_imp_attr2 !== "") {
-        console.log(current_filter);
-
-        filters = [];
-
-        filters.push(value_attr);
-        filters.push(current_filter);
-
-        //removeActiveFromOthers();
-
-        element.childNodes.item(1).childNodes.item(3).classList.add("active");
-
-        console.log(filters);
-
-        res = JSON.stringify(filters);
-
-        updateFilter();
-      }
-    });
-  });
-
   updateFilter();
 
   let avg_rating = JSON.parse(
@@ -231,7 +123,6 @@ $(document).ready(function () {
 
   // Calculate the average rating and number of filled stars
   var averageRating = parseFloat(avg_rating);
-  console.log(averageRating);
   var numFilledStars = Math.round(averageRating);
 
   // Clear any existing star elements
@@ -241,13 +132,13 @@ $(document).ready(function () {
   for (var i = 1; i <= 5; i++) {
     var star = $("<i></i>").addClass("fas fa-star star");
 
-    console.log(i, numFilledStars);
-
     if (i > numFilledStars) {
       star.addClass("not_filled");
     }
     $(".rating-stars").append(star);
   }
+
+  console.log(id_for_prod);
 
   // Star rating
   $("#rating-stars").on("click", ".star", function () {
@@ -270,7 +161,7 @@ $(document).ready(function () {
       data: {
         "comment": comment,
         "rating": rating,
-        "product_id": sku_for_prod,
+        "product_id": JSON.parse(id_for_prod),
       },
       success: function (response) {
         // Update reviews list with new review

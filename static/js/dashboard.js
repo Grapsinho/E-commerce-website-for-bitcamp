@@ -1,4 +1,7 @@
 const delete_btn = document.querySelectorAll("#delete_product");
+const update_product_modal_btn = document.querySelectorAll(
+  "#update_product_modal-btn"
+);
 
 const jwtToken = localStorage.getItem("access_token");
 
@@ -92,7 +95,7 @@ delete_btn.forEach((element) => {
         error: function (xhr, status, error) {
           console.error(xhr.responseText);
 
-          if (error.responseJSON.error == "Token has expired") {
+          if (error.responseText.error25 == "Token has expired") {
             $.ajax({
               url: `${location.protocol}//${location.host}/auth/jwt/refresh/`,
               type: "POST",

@@ -6,6 +6,56 @@
   type="text/css"
   media="screen"
 />
+
+<style>
+  .card1 {
+    display: flex;
+    align-items: center; /* Align content to the left */
+    padding: 10px;
+    margin: 5px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    width: 150px; /* Adjust width as needed */
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+  }
+
+  .card1.active {
+    border-color: red;
+  }
+
+  .card1.active .price {
+    color: red;
+  }
+
+  .card1.active h2 {
+    color: red;
+  }
+
+  .card-image {
+    width: 30px;
+    height: 30px;
+    margin-right: 5px;
+    background-color: #ddd; /* Placeholder color */
+    background-size: cover;
+  }
+  .card1 h2 {
+    font-size: 14px;
+    margin-bottom: 3px;
+  }
+  .card1 .price {
+    font-size: 12px;
+    color: #333;
+    font-weight: bold;
+    margin-bottom: 3px;
+  }
+
+  .list-group {
+    display: grid;
+    grid-template-columns: minmax(150px, max-content) repeat(auto-fill, 160px) 15%;
+  }
+</style>
+
 {% endblock %} {% block content %}
 
 <section class="main-section-productDtl">
@@ -69,44 +119,50 @@
         class="filters d-flex gap-2"
         style="flex-wrap: wrap; flex-direction: column"
       >
-        {% for attribute, values in filter_data.items %}
-        <div>
-          <div
-            class="d-flex gap-2"
-            style="flex-wrap: wrap; flex-direction: column"
-          >
-            {{ attribute }}:
-            <div class="d-flex gap-2">
-              {% for value in values %}
-              <div
-                class="collapse show filter-products-values"
-                id="collapseExample{{ attribute }}"
-                data-filter="{{ attribute }}"
-                data-value="{{ value }}"
-              >
-                <div class="card card-body mb-1 values-filter border-0 p-0">
-                  <input
-                    type="checkbox"
-                    class="btn-check"
-                    id="btn-check-{{ value }}"
-                    autocomplete="off"
-                    data-attribute="{{ attribute }}"
-                    data-value="{{ value }}"
-                  />
-                  <label
-                    class="btn btn-primary filter-value-sty"
-                    for="btn-check"
-                    data-filter="{{ attribute }}"
-                    data-value="{{ value }}"
-                    >{{ value }}</label
-                  >
-                </div>
-              </div>
-              {% endfor %}
+        <div class="list-group">
+          {% for i in product %}
+
+          <!-- -->
+          {% if i.is_default %}
+
+          <div class="card1 active" data-sku="{{i.sku}}">
+            <img
+              class="card-image"
+              src="/static{{i.img_url.url}}"
+              alt="Replace with your image"
+            />
+            <div>
+              <h2>1 option from</h2>
+              <p class="price" data-price="{{i.retail_price}}">
+                ${{i.retail_price}}
+              </p>
             </div>
           </div>
+          {% else %}
+          <!-- -->
+
+          <div class="card1" data-sku="{{i.sku}}">
+            <img
+              class="card-image"
+              src="/static{{i.img_url.url}}"
+              alt="Replace with your image"
+            />
+            <div>
+              <h2>1 option from</h2>
+              <div class="price" data-price="{{i.retail_price}}">
+                ${{i.retail_price}}
+              </div>
+            </div>
+          </div>
+          {% endif %}
+          <!-- -->
+          {% endfor %}
         </div>
-        {% endfor %}
+
+        <div
+          class="list-group list-group-flush attrs_and_values"
+          style="display: block"
+        ></div>
       </div>
 
       <div class="priceandquantity mt-5">
@@ -189,9 +245,8 @@
 </section>
 
 {{rec_data1|json_script:'attributes_values'}}
-{{most_important_attribute|json_script:'most_imp_attr'}}
 {{average_rating|json_script:'avg_rating'}} {{sku|json_script:'sku_for_prod'}}
 <!--  -->
 {% block scripts %}
-<script src="{% static 'js/product_detel.js' %}"></script>
+<script src="{% static 'js/product_dtl1.js' %}"></script>
 {% endblock scripts %} {% endblock %}

@@ -4,7 +4,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Add Products</title>
+    <title>Update Products</title>
 
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css"
@@ -64,7 +64,7 @@
         <a href="{% url 'home' %}">Go Home</a>
 
         <form class="row g-3 mt-3" enctype="multipart/form-data">
-          <h2>Describe Your Product.</h2>
+          <h2>Update Your Product.</h2>
 
           <div class="col-md-6">
             <label for="formGroupExampleInput" class="form-label"
@@ -75,6 +75,7 @@
               class="form-control category"
               id="formGroupExampleInput"
               placeholder="A category that superficially describes your product."
+              value="{{product.category.parent}}"
             />
           </div>
           <div class="col-md-6">
@@ -86,6 +87,7 @@
               class="form-control sub_category"
               id="formGroupExampleInput2"
               placeholder="A category that deeply describes your product."
+              value="{{product.category}}"
             />
           </div>
           <div class="col-md-6">
@@ -97,6 +99,7 @@
               class="form-control product_name"
               id="formGroupExampleInput"
               placeholder="Your Product Name."
+              value="{{product.name}}"
             />
           </div>
           <div class="col-md-6 d-flex" style="flex-direction: column">
@@ -107,13 +110,20 @@
               class="form-control, product_desc"
               id="exampleFormControlTextarea1"
               rows="3"
-            ></textarea>
+            >
+{{product.description}}
+            </textarea>
           </div>
 
-          <h2 class="mt-5">Create Sub Products.</h2>
+          <h2 class="mt-5">Update Sub Products.</h2>
 
           <div class="cont_for_sub_pro">
-            <div class="sub_prod1 row g-3" data-count="1">
+            {% for prod in sub_products %}
+            <div
+              class="sub_prod1 row g-3 mt-5"
+              style="align-items: end"
+              data-count="{{forloop.counter0}}"
+            >
               <div class="col-md-6">
                 <label for="formGroupExampleInput" class="form-label"
                   >Sku</label
@@ -123,7 +133,8 @@
                   class="form-control product_sku necessary_form"
                   id="formGroupExampleInput"
                   placeholder="Enter Your Products SKU."
-                  data-count="1"
+                  data-count="{{forloop.counter0}}"
+                  value="{{prod.sku}}"
                 />
               </div>
               <div class="col-md-6">
@@ -137,7 +148,8 @@
                   class="form-control product_price necessary_form"
                   id="formGroupExampleInput2"
                   placeholder="Enter your Products Price."
-                  data-count="1"
+                  data-count="{{forloop.counter0}}"
+                  value="{{prod.retail_price}}"
                 />
                 <span
                   style="font-size: 0.8; color: red"
@@ -154,75 +166,130 @@
                   class="form-control product_stock necessary_form"
                   id="formGroupExampleInput"
                   placeholder="Stock."
-                  data-count="1"
+                  data-count="{{forloop.counter0}}"
+                  value="{{prod.stock}}"
                 />
                 <span
                   style="font-size: 0.8; color: red"
                   class="stock_error"
                 ></span>
               </div>
-              <div class="col-md-6">
-                <label for="formFile" class="form-label">Choose image</label>
-                <input
-                  class="form-control product_image necessary_form"
-                  type="file"
-                  id="formFile"
-                  name="image"
-                  data-count="1"
-                />
+              <div class="col-md-6 d-flex gap-3" style="align-items: end">
+                <div class="w-75">
+                  <label for="formFile" class="form-label">Choose image</label>
+
+                  <input
+                    class="form-control product_image necessary_form"
+                    type="file"
+                    id="formFile"
+                    name="image"
+                    data-count="{{forloop.counter0}}"
+                    value="/static{{ prod.img_url.url }}"
+                  />
+                </div>
+
+                <div class="w-25">
+                  <label class="form-label">Current image</label>
+
+                  <img
+                    src="/static{{ prod.img_url.url }}"
+                    alt=""
+                    class="w-75"
+                  />
+                </div>
               </div>
 
               <h2 class="mt-5">Write down the features of the product</h2>
 
-              <div class="attr_cont1" data-count="1">
-                <div class="attributes_div1 d-flex" data-count="1">
-                  <div class="col-md-6 attr_first">
-                    <label for="formGroupExampleInput2" class="form-label"
-                      >Attributes</label
-                    >
-                    <div class="d-flex align-items-center">
+              <div
+                class="attr_cont{{forloop.counter0}}"
+                data-count="{{forloop.counter0}}"
+              >
+                {% for attr, values in attr_dict %}
+                <!-- -->
+                {% if attr == prod.pk %}
+                <!-- -->
+                {% for attrs, value in values.items %}
+                <div class="d-flex align-items-end gap-3">
+                  <div
+                    class="attributes_div{{forloop.parentloop.counter0}} d-flex mt-3 all_attr_div"
+                    data-count="{{forloop.parentloop.counter0}}"
+                    style="width: 70%"
+                  >
+                    <div class="col-md-6 attr_first">
+                      <label for="formGroupExampleInput2" class="form-label"
+                        >Attributes</label
+                      >
+                      <div class="d-flex align-items-center">
+                        <input
+                          type="text"
+                          class="form-control product_attribute necessary_form"
+                          id="formGroupExampleInput2"
+                          placeholder="Color, Material etc..."
+                          data-count="{{forloop.parentloop.counter0}}"
+                          value="{{ attrs }}"
+                        />
+                        :
+                      </div>
+                    </div>
+                    {% for val in value %}
+                    <div class="col-md-6 attr_first_value">
+                      <label for="formGroupExampleInput" class="form-label"
+                        >Attribute Value</label
+                      >
                       <input
                         type="text"
-                        class="form-control product_attribute necessary_form"
-                        id="formGroupExampleInput2"
-                        placeholder="Color, Material etc..."
-                        data-count="1"
+                        class="form-control product_attribute_value necessary_form"
+                        id="formGroupExampleInput"
+                        placeholder="Red, Blue, Cotton etc..."
+                        data-count="{{forloop.parentloop.counter0}}"
+                        value="{{val}}"
                       />
-                      :
                     </div>
+                    {% endfor %}
                   </div>
-                  <div class="col-md-6 attr_first_value">
-                    <label for="formGroupExampleInput" class="form-label"
-                      >Attribute Value</label
-                    >
-                    <input
-                      type="text"
-                      class="form-control product_attribute_value necessary_form"
-                      id="formGroupExampleInput"
-                      placeholder="Red, Blue, Cotton etc..."
-                      data-count="1"
-                    />
+
+                  <div
+                    class="p-2 attr_delete"
+                    style="background-color: red; cursor: pointer"
+                    data-count="{{forloop.parentloop.counter0}}"
+                  >
+                    <i class="bi bi-trash text-light"></i>
                   </div>
                 </div>
+                {% endfor %}
+                <!-- -->
+                {% endif %}
+                <!-- -->
+                {% endfor %}
               </div>
               <button
-                class="btn btn-secondary w-50 add_more_attr1"
+                class="btn btn-secondary w-50 add_more_attr{{forloop.counter0}}"
                 style="margin: 1rem auto"
                 type="button"
-                data-count="1"
+                data-count="{{forloop.counter0}}"
               >
                 Add More
               </button>
 
               <div class="col-12">
                 <div class="form-check">
+                  {% if prod.is_default %}
                   <input
                     class="form-check-input"
                     type="checkbox"
                     id="gridCheck"
                     checked
-                    data-count="1"
+                    data-count="{{forloop.counter0}}"
                   />
+                  {% else %}
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    id="gridCheck"
+                    data-count="{{forloop.counter0}}"
+                  />
+                  {% endif %}
                   <label class="form-check-label" for="gridCheck">
                     Is Default
                   </label>
@@ -237,17 +304,12 @@
                 </div>
               </div>
             </div>
-          </div>
-
-          <div class="col-12">
-            <button type="button" class="btn btn-warning add_more_sbProduct">
-              Add More Product
-            </button>
+            {% endfor %}
           </div>
 
           <div class="col-12">
             <button type="button" class="btn btn-primary create_product_btn">
-              Create
+              Update
             </button>
           </div>
         </form>
@@ -257,9 +319,10 @@
     <!-- key იქნება category-term და value იქნება category-->
     {{category|json_script:'category-term'}}
     {{subCategory|json_script:'subCategory-term'}}
+    {{sku|json_script:'unique_id_for_prod'}}
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
-    <script src="{% static 'js/add_product1.js' %}"></script>
+    <script src="{% static 'js/update_products1.js' %}"></script>
   </body>
 </html>

@@ -45,7 +45,7 @@ $(document).ready(function () {
                   <img src="${product.img_url}" alt="Product Image" />
                   <div class="product-info">
                     <h2>${product.name}</h2>
-                    <p class="price">${product.price}</p>
+                    <p class="price">$${product.price}</p>
                     <a
                       href="${location.protocol}//${location.host}/product_detail/${product.unique_id}/"
                       class="btn15"

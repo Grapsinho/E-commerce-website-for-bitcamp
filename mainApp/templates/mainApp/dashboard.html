@@ -100,10 +100,58 @@
                   <span
                     class="material-icons-outlined"
                     id="update_product"
+                    data-bs-toggle="modal"
+                    data-bs-target="#exampleModal{{product.id}}Update"
                     data-sku="{{product.sku}}"
                     style="cursor: pointer; color: grey; font-size: 1.7rem"
                     >settings</span
                   >
+
+                  <!-- Modal -->
+                  <div
+                    class="modal fade bots_modal"
+                    id="exampleModal{{product.id}}Update"
+                    tabindex="-1"
+                    aria-labelledby="exampleModalLabel"
+                    aria-hidden="true"
+                  >
+                    <div class="modal-dialog">
+                      <div class="modal-content">
+                        <div class="modal-header">
+                          <h1
+                            class="modal-title fs-5 text-dark"
+                            id="exampleModalLabel"
+                            style="text-align: left"
+                          >
+                            Are You Sure You Want to Update This Product?
+                            {{product.sku}}
+                          </h1>
+                          <button
+                            type="button"
+                            class="btn-close"
+                            data-bs-dismiss="modal"
+                            aria-label="Close"
+                          ></button>
+                        </div>
+                        <div class="modal-footer">
+                          <button
+                            type="button"
+                            class="btn btn-secondary"
+                            data-bs-dismiss="modal"
+                          >
+                            Close
+                          </button>
+                          <a
+                            href="{% url 'update_product' product.product.unique_id %}"
+                            class="btn btn-primary"
+                            id="update_product_modal-btn"
+                          >
+                            Yes
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </td>
                 <td data-label="Delete" data-sku="{{product.sku}}">
                   <span
@@ -177,7 +225,8 @@
                             id="exampleModalLabel"
                             style="text-align: left"
                           >
-                            Do You Want to Delete This Product? {{product.sku}}
+                            Are You Sure You Want to Delete This Product?
+                            {{product.sku}}
                           </h1>
                           <button
                             type="button"
@@ -241,6 +290,6 @@
     <!-- ApexCharts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/apexcharts/3.35.5/apexcharts.min.js"></script>
     <!-- Custom JS -->
-    <script src="{% static 'js/dashboard_js.js' %}"></script>
+    <script src="{% static 'js/dashboard.js' %}"></script>
   </body>
 </html>
