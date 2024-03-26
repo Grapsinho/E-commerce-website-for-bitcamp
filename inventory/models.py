@@ -133,6 +133,21 @@ class ProductInventory(models.Model):
     def __str__(self):
         return self.sku
 
+class Wishlist(models.Model):
+    user = models.ForeignKey(Consumer, on_delete=models.CASCADE, related_name='wishlist')
+    products = models.ManyToManyField('ProductInventory', through='WishlistItem', related_name='wishlists_new', blank=True)
+
+    def __str__(self):
+        return f"Wishlist for {self.user.email}"
+
+class WishlistItem(models.Model):
+    wishlist = models.ForeignKey(Wishlist, related_name='wishlistss', on_delete=models.CASCADE)
+    product = models.ForeignKey('ProductInventory', related_name='wishlists_newss', on_delete=models.PROTECT)
+    added_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.wishlist.user.email}'s Wishlist Item: {self.product.sku}"
+
 class ProductAttributeValues(models.Model):
     attributevalues = models.ForeignKey(
         "ProductAttributeValue",

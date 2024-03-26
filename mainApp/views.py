@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from users.models import Vendor, Consumer
-from inventory.models import Product, ProductInventory, ProductAttribute, ProductAttributeValue, Category,Sub_Category, ProductAttributeValues, Rating, Review
+from inventory.models import Product, ProductInventory, ProductAttribute, ProductAttributeValue, Category, Sub_Category, ProductAttributeValues, Rating, Review, Wishlist, WishlistItem
 from django.contrib.auth.decorators import login_required
 import jwt
 from django.conf import settings
@@ -15,14 +15,12 @@ import os
 '''
 DONE search&filter
 DONE user registration&login, password change
-DONE product creation but we have some bugs but im not gonna fix them
+DONE product creation
 DONE product detail page and rating&reviews
-DONE product delete
-
-eseigi xval gavaketeb washlas da updates productis
-anu washilstvis unda davamato productis unique id da mere rogorc chatgpt aketebs egre vqna
-
-Dashboard, add to cart
+DONE product delete&update
+DONE dashboard
+ 
+add to cart
 '''
 
 
@@ -45,6 +43,16 @@ def home(request):
         vendor = Vendor.objects.get(email=request.user)
         if request.method == 'GET':
             # Retrieve all ProductInventory instances
+
+            try:
+                wishlist12 = Wishlist.objects.get(user=vendor)
+
+                wishlist_items = WishlistItem.objects.filter(wishlist=wishlist12)
+
+                len_wish = len(wishlist_items)
+            except:
+                wishlist_items = None
+                len_wish = 0
 
             q = request.GET.get('search') if request.GET.get('search') != None else ''
 
@@ -72,12 +80,21 @@ def home(request):
                         # If it doesn't exist, create a new list with the value
                         attr_dict[attribute_value.attributevalues.attribute.name] = [attribute_value.attributevalues.value]
 
-        context = {'vendor': vendor, 'attrs': attr_dict.items(), 'product_inventories':product_inventories, 'categories': categories, 'q': q}
+        context = {'vendor': vendor, 'attrs': attr_dict.items(), 'product_inventories':product_inventories, 'categories': categories, 'q': q, 'len_wish': len_wish, "wishprods": wishlist_items}
 
         return render(request, 'mainApp/home.html', context)
     except Exception as e:
             if request.method == 'GET':
             # Retrieve all ProductInventory instances
+                try:
+                    wishlist12 = Wishlist.objects.get(user=request.user)
+
+                    wishlist_items = WishlistItem.objects.filter(wishlist=wishlist12)
+
+                    len_wish = len(wishlist_items)
+                except:
+                    wishlist_items = None
+                    len_wish = 0
 
                 q = request.GET.get('search') if request.GET.get('search') != None else ''
 
@@ -105,7 +122,7 @@ def home(request):
                             # If it doesn't exist, create a new list with the value
                             attr_dict[attribute_value.attributevalues.attribute.name] = [attribute_value.attributevalues.value]
 
-            context = {'attrs': attr_dict.items(), 'product_inventories':product_inventories, 'categories': categories, 'q': q}
+            context = {'attrs': attr_dict.items(), 'product_inventories':product_inventories, 'categories': categories, 'q': q, 'len_wish': len_wish, "wishprods": wishlist_items}
 
             return render(request, 'mainApp/home.html', context)
 
@@ -131,6 +148,17 @@ def add_products(request):
 def product_detail(request, sku):
     try:
         vendor = Vendor.objects.get(email=request.user)
+
+        try:
+            wishlist12 = Wishlist.objects.get(user=vendor)
+
+            wishlist_items = WishlistItem.objects.filter(wishlist=wishlist12)
+
+            len_wish = len(wishlist_items)
+        except:
+            wishlist_items = None
+            len_wish = 0
+
         product = ProductInventory.objects.filter(product__unique_id=sku)
 
         produ_name = ''
@@ -168,10 +196,21 @@ def product_detail(request, sku):
             'sku': sku,
             "rec_data": values, 
             "rec_data2": reorganized_data1.items(), 
-            'reviews': reviews, 'average_rating': average_rating, 'num_ratings': num_ratings
+            'reviews': reviews, 'average_rating': average_rating, 'num_ratings': num_ratings,
+            'len_wish': len_wish, "wishprods": wishlist_items
         }
         return render(request, 'mainApp/product_detail.html', context)
     except Exception as e:
+            try:
+                wishlist12 = Wishlist.objects.get(user=request.user)
+
+                wishlist_items = WishlistItem.objects.filter(wishlist=wishlist12)
+
+                len_wish = len(wishlist_items)
+            except:
+                wishlist_items = None
+                len_wish = 0
+
             product = ProductInventory.objects.filter(product__unique_id=sku)
 
             produ_name = ''
@@ -204,12 +243,12 @@ def product_detail(request, sku):
             
             context = {
                 "product": product,
-                "vendor": vendor,
                 "produ_name": produ_name,
                 'sku': sku,
                 "rec_data": values, 
                 "rec_data2": reorganized_data1.items(), 
-                'reviews': reviews, 'average_rating': average_rating, 'num_ratings': num_ratings
+                'reviews': reviews, 'average_rating': average_rating, 'num_ratings': num_ratings,
+                'len_wish': len_wish, "wishprods": wishlist_items
             }
             return render(request, 'mainApp/product_detail.html', context)
 
@@ -317,6 +356,7 @@ def filter_products_for_collections(request):
             'price': product.retail_price,
             'unique_id': product.product.unique_id,
             'img_url': product.img_url.url,
+            'pk_forWish': product.pk,
         
         } for product in products.distinct()]
 
@@ -700,7 +740,6 @@ def update_product(request, sku):
 
     return render(request, 'mainApp/update_product.html', context)
 
-
 def update_product_ajax(request):
     if request.method == 'POST':
         sub_prod_obj_str = request.POST.get('sub_prod_obj')
@@ -918,3 +957,20 @@ def update_product_ajax(request):
 
         return JsonResponse(response_data)
     
+def add_to_wishlist(request):
+    if request.method == 'POST' and request.user.is_authenticated:
+        product_id = request.POST.get('product_id')
+        product = ProductInventory.objects.get(pk=product_id)
+        wishlist, created = Wishlist.objects.get_or_create(user=request.user)
+        
+        # Check if the product is already in the wishlist
+        if wishlist.products.filter(pk=product_id).exists():
+            return JsonResponse({'success': False, 'message': 'Product already in wishlist'})
+
+        # Add the product to the wishlist
+        wishlist_item = WishlistItem.objects.create(wishlist=wishlist, product=product)
+        
+        return JsonResponse({'success': True, 'message': 'Product added to wishlist'})
+    
+    return JsonResponse({'success': False, 'message': 'User not authenticated or method not allowed'})
+

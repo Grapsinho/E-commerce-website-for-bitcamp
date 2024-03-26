@@ -9,6 +9,7 @@ urlpatterns = [
     path("update_product/<str:sku>/", update_product, name="update_product"),
     
     path('deleteProduct/', deleteProduct, name='deleteProduct'),
+    path("add_to_wishlist/", add_to_wishlist, name="add_to_wishlist"),
     path('update_product_ajax/', update_product_ajax, name='update_product_ajax'),
     path('delete_default_product/', delete_default_product, name='delete_default_product'),
     path("ajax_viewFor_CreteProducts/", ajax_viewFor_CreteProducts, name="ajax_viewFor_CreteProducts"),

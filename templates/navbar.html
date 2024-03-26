@@ -135,6 +135,22 @@
             </div>
             <div class="col-md-5 my-auto">
               <ul class="nav justify-content-end align-items-center">
+                {% if request.user.is_authenticated %}
+                <li class="nav-item">
+                  <button
+                    class="nav-link"
+                    id="wishproducts"
+                    data-bs-toggle="modal"
+                    data-bs-target="#wishproductss"
+                  >
+                    <i class="fa fa-heart"></i> Wishlist (<span
+                      class="wish_count"
+                      >{{len_wish}}</span
+                    >)
+                  </button>
+                </li>
+                {% endif %}
+
                 <li class="nav-item">
                   <a class="nav-link" href="#">
                     <i class="fa fa-shopping-cart"></i> Cart (0)
@@ -219,6 +235,68 @@
                 </div>
               </ul>
             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="modal fade"
+      id="wishproductss"
+      tabindex="-1"
+      aria-labelledby="exampleModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="exampleModalLabel">WishList</h1>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            {% if wishprods %}
+            <!---->
+            {% for wish in wishprods %}
+            <a
+              href="{% url 'product_detail' wish.product.product.unique_id %}"
+              class="result_a_tag"
+              style="display: flex; align-items: center"
+              ><img
+                src="/static/images/{{wish.product.img_url}}"
+                alt=""
+                style="max-width: 70px"
+              />
+              <span
+                class="result-span"
+                style="display: flex; flex-direction: column"
+              >
+                <span style="color: black">
+                  {{wish.product.product.name}}
+                </span>
+                <span class="price" style="color: black">
+                  $ {{wish.product.retail_price}}
+                </span>
+              </span>
+            </a>
+            {% endfor %} {% else %}
+
+            <p>You Don't Have Any Wished Products Yet.</p>
+            <!---->
+            {% endif %}
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Close
+            </button>
           </div>
         </div>
       </div>

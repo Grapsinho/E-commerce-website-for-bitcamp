@@ -491,14 +491,10 @@ $(document).ready(function () {
             }
 
             if (
-              $(".add_more_attr1").data("count") ===
-                $(".attr_cont1").data("count") &&
-              document.querySelectorAll(".attributes_div1").length !== 2
+              $(element).data("count") ===
+              $(`.attr_cont${$(element).data("count")}`).data("count")
             ) {
-            }
-
-            if (document.querySelectorAll(".attributes_div1").length == 2) {
-              $(".add_more_attr1").addClass("d-none");
+              $(element).addClass("d-none");
             }
           });
       });
@@ -524,7 +520,6 @@ $(document).ready(function () {
           let everything_fine1 = true;
           let everything_fine2 = true;
           let everything_fine3 = false;
-          let everything_fine4 = true;
 
           $(".necessary_form").each(function (index, element2) {
             if (element2.value == "") {
@@ -549,7 +544,7 @@ $(document).ready(function () {
 
           // Initialize a set to store unique SKUs
           const uniqueSKUs = new Set();
-          let duplicateFound = false;
+          let duplicateFound = true;
 
           // Iterate through each product SKU
           for (let index = 0; index < prd_sku.length; index++) {
@@ -558,7 +553,7 @@ $(document).ready(function () {
             // Check if the SKU is already in the set
             if (uniqueSKUs.has(sku)) {
               alert(`Duplicate SKU found: ${sku}. Please change it.`);
-              duplicateFound = true;
+              duplicateFound = false;
               break; // Exit the loop early since a duplicate is found
             } else {
               // Add the SKU to the set if it's not a duplicate
@@ -640,7 +635,7 @@ $(document).ready(function () {
               everything_fine1 &&
               everything_fine2 &&
               everything_fine3 &&
-              everything_fine4
+              duplicateFound
             ) {
               const id = iFor_cont;
 
@@ -686,7 +681,7 @@ $(document).ready(function () {
             everything_fine1 &&
             everything_fine2 &&
             everything_fine3 &&
-            everything_fine4
+            duplicateFound
           ) {
             $.ajax({
               url: `${location.protocol}//${location.host}/ajax_viewFor_CreteProducts/`,

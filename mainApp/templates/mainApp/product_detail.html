@@ -212,6 +212,7 @@
     </div>
   </div>
 
+  {% if request.user.is_authenticated %}
   <h2>Add a Review:</h2>
   <div id="rating-stars">
     <i class="far fa-star star" data-value="1"></i>
@@ -229,6 +230,9 @@
     ></textarea>
     <button type="button" class="rating_review_btn">Submit</button>
   </form>
+  {% else %}
+  <h4>Please log in to leave a review.</h4>
+  {% endif %}
 
   <h2>Reviews:</h2>
   <ul id="reviews-list" class="mb-4">
