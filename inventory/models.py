@@ -8,12 +8,11 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 #ეს არის ტექსტის თარგმნისთვის
 from django.utils.translation import gettext_lazy as _
 
-#კაროჩე ვიცი ეს რაც არის რა
-from mptt.models import MPTTModel, TreeForeignKey
-
 from phonenumber_field.modelfields import PhoneNumberField
 
 from users.models import Consumer, Vendor
+
+from django.utils import timezone
 
 class Category(models.Model):
     name = models.CharField(
@@ -147,6 +146,40 @@ class WishlistItem(models.Model):
 
     def __str__(self):
         return f"{self.wishlist.user.email}'s Wishlist Item: {self.product.sku}"
+    
+class Cart(models.Model):
+    user = models.OneToOneField(Consumer, related_name='cart', on_delete=models.CASCADE)
+    created_at = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return f"Cart for {self.user.username}"
+
+class CartItem(models.Model):
+    cart = models.ForeignKey(Cart, related_name='items', on_delete=models.CASCADE)
+    product = models.ForeignKey('ProductInventory', related_name='cart_items', on_delete=models.CASCADE)
+    quantity = models.IntegerField(default=0)
+
+    def __str__(self):
+        return f"CartItem: {self.product.sku} ({self.quantity}) in {self.cart}"
+    
+    @property
+    def get_total(self):
+        total = self.product.retail_price * self.quantity
+        return total
+    
+    def get_attribute(self):
+        # Retrieve the first attribute associated with the product
+        attributes = self.product.productAttributes.all()
+        if attributes.exists():
+            return attributes.first().attribute.name
+        return None
+
+    def get_attr_value(self):
+        # Retrieve the value of the first attribute associated with the product
+        attribute_values = self.product.productAttributes.all()
+        if attribute_values.exists():
+            return attribute_values.first().value
+        return None
 
 class ProductAttributeValues(models.Model):
     attributevalues = models.ForeignKey(
@@ -221,8 +254,7 @@ class OrderItem(models.Model):
 class ShippingAddress(models.Model):
     costumer = models.ForeignKey(Consumer, on_delete=models.SET_NULL, null=True, blank=True)
     order = models.ForeignKey(Order, on_delete=models.SET_NULL, null=True, blank=True)
-    name = models.CharField(max_length=25, null=True)
-    last_name = models.CharField(max_length=50, null=True)
+    full_name = models.CharField(max_length=100, null=True)
     address = models.CharField(max_length=500, null=True)
     city = models.CharField(max_length=500, null=True)
     Postal_code = models.CharField(max_length=30, null=True)

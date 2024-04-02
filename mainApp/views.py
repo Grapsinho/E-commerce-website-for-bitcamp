@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from users.models import Vendor, Consumer
-from inventory.models import Product, ProductInventory, ProductAttribute, ProductAttributeValue, Category, Sub_Category, ProductAttributeValues, Rating, Review, Wishlist, WishlistItem
+from inventory.models import Product, ProductInventory, ProductAttribute, ProductAttributeValue, Category, Sub_Category, ProductAttributeValues, Rating, Review, Wishlist, WishlistItem, Cart, CartItem
 from django.contrib.auth.decorators import login_required
 import jwt
 from django.conf import settings
@@ -10,6 +10,7 @@ from django.db.models import Avg
 import bleach
 from django.db.models import F
 import os
+from datetime import datetime, timedelta
 
 
 '''
@@ -19,10 +20,16 @@ DONE product creation
 DONE product detail page and rating&reviews
 DONE product delete&update
 DONE dashboard
- 
-add to cart
-'''
+DONE  add to cart & remove from cart & update cart
 
+
+daviwye mushaoba checkoutze sachiroa ubralod informaciis wamogeba anu checkoutiga meti araferi da nu iq kide aris 
+ragaceebi mara egeni nelnela iqneba iq stokis dakleba da ragaceebi
+
+anu xval momaq informacia da vanxorcieleb checkouts ajaxit
+
+xval ro movrche es taski ukve kargia
+'''
 
 """
     POST /api/users: User registration
@@ -40,91 +47,67 @@ def sanitize_input(user_input):
 
 def home(request):
     try:
-        vendor = Vendor.objects.get(email=request.user)
-        if request.method == 'GET':
-            # Retrieve all ProductInventory instances
+        if request.user.is_vendor:
+            vendor = Vendor.objects.get(email=request.user)
+        else:
+            vendor = request.user
+    except:
+        vendor = request.user
 
-            try:
-                wishlist12 = Wishlist.objects.get(user=vendor)
+    if request.method == 'GET':
+        # Retrieve all ProductInventory instances
 
-                wishlist_items = WishlistItem.objects.filter(wishlist=wishlist12)
+        total_price = []
+        
+        try:
+            cartData = Cart.objects.get(user=vendor)
 
-                len_wish = len(wishlist_items)
-            except:
-                wishlist_items = None
-                len_wish = 0
+            cart_data = cartData.items.all()
 
-            q = request.GET.get('search') if request.GET.get('search') != None else ''
+            for i in cart_data:
+                total_price.append(i.product.retail_price * i.quantity)
+        except:
+            cart_data = 'None'
 
-            if q == '':
-                product_inventories = ProductInventory.objects.all()
-            else:
-                product_inventories = ProductInventory.objects.filter(product__name__icontains=sanitize_input(q))
+        try:
+            wishlist12 = Wishlist.objects.get(user=vendor)
 
-            attr_dict = {}
-            categories = Category.objects.all()
+            wishlist_items = WishlistItem.objects.filter(wishlist=wishlist12)
 
-            # Loop through each ProductInventory instance
-            for product_inventory in product_inventories:
-                # Retrieve all associated attribute values for this ProductInventory instance
-                attribute_values = product_inventory.productattributevaluess.all().distinct()
-                
-                # Loop through each attribute value and print its name and value
-                for attribute_value in attribute_values:
-                    # Check if the attribute name already exists in the reorganized data
-                    if attribute_value.attributevalues.attribute.name in attr_dict:
-                        if attribute_value.attributevalues.value not in attr_dict[attribute_value.attributevalues.attribute.name]:
-                            # If it's not in the list, append it
-                            attr_dict[attribute_value.attributevalues.attribute.name].append(attribute_value.attributevalues.value)
-                    else:
-                        # If it doesn't exist, create a new list with the value
-                        attr_dict[attribute_value.attributevalues.attribute.name] = [attribute_value.attributevalues.value]
+            len_wish = len(wishlist_items)
+        except:
+            wishlist_items = None
+            len_wish = 0
 
-        context = {'vendor': vendor, 'attrs': attr_dict.items(), 'product_inventories':product_inventories, 'categories': categories, 'q': q, 'len_wish': len_wish, "wishprods": wishlist_items}
+        q = request.GET.get('search') if request.GET.get('search') != None else ''
 
-        return render(request, 'mainApp/home.html', context)
-    except Exception as e:
-            if request.method == 'GET':
-            # Retrieve all ProductInventory instances
-                try:
-                    wishlist12 = Wishlist.objects.get(user=request.user)
+        if q == '':
+            product_inventories = ProductInventory.objects.all()
+        else:
+            product_inventories = ProductInventory.objects.filter(product__name__icontains=sanitize_input(q))
 
-                    wishlist_items = WishlistItem.objects.filter(wishlist=wishlist12)
+        attr_dict = {}
+        categories = Category.objects.all()
 
-                    len_wish = len(wishlist_items)
-                except:
-                    wishlist_items = None
-                    len_wish = 0
-
-                q = request.GET.get('search') if request.GET.get('search') != None else ''
-
-                if q == '':
-                    product_inventories = ProductInventory.objects.all()
+        # Loop through each ProductInventory instance
+        for product_inventory in product_inventories:
+            # Retrieve all associated attribute values for this ProductInventory instance
+            attribute_values = product_inventory.productattributevaluess.all().distinct()
+            
+            # Loop through each attribute value and print its name and value
+            for attribute_value in attribute_values:
+                # Check if the attribute name already exists in the reorganized data
+                if attribute_value.attributevalues.attribute.name in attr_dict:
+                    if attribute_value.attributevalues.value not in attr_dict[attribute_value.attributevalues.attribute.name]:
+                        # If it's not in the list, append it
+                        attr_dict[attribute_value.attributevalues.attribute.name].append(attribute_value.attributevalues.value)
                 else:
-                    product_inventories = ProductInventory.objects.filter(product__name__icontains=sanitize_input(q))
+                    # If it doesn't exist, create a new list with the value
+                    attr_dict[attribute_value.attributevalues.attribute.name] = [attribute_value.attributevalues.value]
 
-                attr_dict = {}
-                categories = Category.objects.all()
+    context = {'vendor': vendor, 'attrs': attr_dict.items(), 'product_inventories':product_inventories, 'categories': categories, 'q': q, 'len_wish': len_wish, "wishprods": wishlist_items, 'cart_data': cart_data, 'len_cart': len(cart_data), 'total_price': sum(total_price)}
 
-                # Loop through each ProductInventory instance
-                for product_inventory in product_inventories:
-                    # Retrieve all associated attribute values for this ProductInventory instance
-                    attribute_values = product_inventory.productattributevaluess.all().distinct()
-                    
-                    # Loop through each attribute value and print its name and value
-                    for attribute_value in attribute_values:
-                        # Check if the attribute name already exists in the reorganized data
-                        if attribute_value.attributevalues.attribute.name in attr_dict:
-                            if attribute_value.attributevalues.value not in attr_dict[attribute_value.attributevalues.attribute.name]:
-                                # If it's not in the list, append it
-                                attr_dict[attribute_value.attributevalues.attribute.name].append(attribute_value.attributevalues.value)
-                        else:
-                            # If it doesn't exist, create a new list with the value
-                            attr_dict[attribute_value.attributevalues.attribute.name] = [attribute_value.attributevalues.value]
-
-            context = {'attrs': attr_dict.items(), 'product_inventories':product_inventories, 'categories': categories, 'q': q, 'len_wish': len_wish, "wishprods": wishlist_items}
-
-            return render(request, 'mainApp/home.html', context)
+    return render(request, 'mainApp/home.html', context)
 
 def add_products(request):
     vendor = Vendor.objects.get(email=request.user)
@@ -146,111 +129,79 @@ def add_products(request):
     return render(request, 'mainApp/add_product.html', context)
 
 def product_detail(request, sku):
+
     try:
-        vendor = Vendor.objects.get(email=request.user)
+        if request.user.is_vendor:
+            vendor = Vendor.objects.get(email=request.user)
+        else:
+            vendor = request.user
+    except:
+        vendor = request.user
 
-        try:
-            wishlist12 = Wishlist.objects.get(user=vendor)
-
-            wishlist_items = WishlistItem.objects.filter(wishlist=wishlist12)
-
-            len_wish = len(wishlist_items)
-        except:
-            wishlist_items = None
-            len_wish = 0
-
-        product = ProductInventory.objects.filter(product__unique_id=sku)
-
-        produ_name = ''
-
-        for i in product:
-            produ_name = i.product.name
-
-        reorganized_data1 = {}
-            
-        # Identify the default product
-        default_product = product.values('productattributevaluess__attributevalues__attribute__name', "productattributevaluess__attributevalues__value")
-            
-        for i in default_product:
-            attribute_name = i["productattributevaluess__attributevalues__attribute__name"]
-            attribute_value = i["productattributevaluess__attributevalues__value"]
-            reorganized_data1[attribute_name] = [attribute_value]
-
-        product32 = product[0].product
-
-        reviews = product32.reviews.all()
-        rating_instance, _ = Rating.objects.get_or_create(product=product32)
-        average_rating = rating_instance.average_rating
-        num_ratings = rating_instance.num_ratings
-
-        values = []
-
-        for attr, values12 in reorganized_data1.items():
-            for j in values12:
-                values.append(j)
+    total_price = []
         
-        context = {
-            "product": product,
-            "vendor": vendor,
-            "produ_name": produ_name,
-            'sku': sku,
-            "rec_data": values, 
-            "rec_data2": reorganized_data1.items(), 
-            'reviews': reviews, 'average_rating': average_rating, 'num_ratings': num_ratings,
-            'len_wish': len_wish, "wishprods": wishlist_items
-        }
-        return render(request, 'mainApp/product_detail.html', context)
-    except Exception as e:
-            try:
-                wishlist12 = Wishlist.objects.get(user=request.user)
+    try:
+        cartData = Cart.objects.get(user=vendor)
 
-                wishlist_items = WishlistItem.objects.filter(wishlist=wishlist12)
+        cart_data = cartData.items.all()
 
-                len_wish = len(wishlist_items)
-            except:
-                wishlist_items = None
-                len_wish = 0
+        for i in cart_data:
+            total_price.append(i.product.retail_price * i.quantity)
+    except:
+        cart_data = 'None'
 
-            product = ProductInventory.objects.filter(product__unique_id=sku)
+    try:
+        wishlist12 = Wishlist.objects.get(user=vendor)
 
-            produ_name = ''
+        wishlist_items = WishlistItem.objects.filter(wishlist=wishlist12)
 
-            for i in product:
-                produ_name = i.product.name
+        len_wish = len(wishlist_items)
+    except:
+        wishlist_items = None
+        len_wish = 0
 
-            reorganized_data1 = {}
-                
-            # Identify the default product
-            default_product = product.values('productattributevaluess__attributevalues__attribute__name', "productattributevaluess__attributevalues__value")
-                
-            for i in default_product:
-                attribute_name = i["productattributevaluess__attributevalues__attribute__name"]
-                attribute_value = i["productattributevaluess__attributevalues__value"]
-                reorganized_data1[attribute_name] = [attribute_value]
+    product = ProductInventory.objects.filter(product__unique_id=sku)
 
-            product32 = product[0].product
+    produ_name = ''
 
-            reviews = product32.reviews.all()
-            rating_instance, _ = Rating.objects.get_or_create(product=product32)
-            average_rating = rating_instance.average_rating
-            num_ratings = rating_instance.num_ratings
+    for i in product:
+        produ_name = i.product.name
 
-            values = []
+    reorganized_data1 = {}
+        
+    # Identify the default product
+    default_product = product.values('productattributevaluess__attributevalues__attribute__name', "productattributevaluess__attributevalues__value")
+        
+    for i in default_product:
+        attribute_name = i["productattributevaluess__attributevalues__attribute__name"]
+        attribute_value = i["productattributevaluess__attributevalues__value"]
+        reorganized_data1[attribute_name] = [attribute_value]
 
-            for attr, values12 in reorganized_data1.items():
-                for j in values12:
-                    values.append(j)
-            
-            context = {
-                "product": product,
-                "produ_name": produ_name,
-                'sku': sku,
-                "rec_data": values, 
-                "rec_data2": reorganized_data1.items(), 
-                'reviews': reviews, 'average_rating': average_rating, 'num_ratings': num_ratings,
-                'len_wish': len_wish, "wishprods": wishlist_items
-            }
-            return render(request, 'mainApp/product_detail.html', context)
+    product32 = product[0].product
+
+    reviews = product32.reviews.all()
+    rating_instance, _ = Rating.objects.get_or_create(product=product32)
+    average_rating = rating_instance.average_rating
+    num_ratings = rating_instance.num_ratings
+
+    values = []
+
+    for attr, values12 in reorganized_data1.items():
+        for j in values12:
+            values.append(j)
+    
+    context = {
+        "product": product,
+        "vendor": vendor,
+        "produ_name": produ_name,
+        'sku': sku,
+        "rec_data": values, 
+        "rec_data2": reorganized_data1.items(), 
+        'reviews': reviews, 'average_rating': average_rating, 'num_ratings': num_ratings,
+        'len_wish': len_wish, "wishprods": wishlist_items,
+        'cart_data': cart_data, 'len_cart': len(cart_data), 'total_price': sum(total_price)
+    }
+    return render(request, 'mainApp/product_detail.html', context)
 
 def dashboard(request, sku):
     vendor = Vendor.objects.get(email=sku)
@@ -280,6 +231,140 @@ def dashboard(request, sku):
     context['top_5_product'] = top_5_product
     
     return render(request, 'mainApp/dashboard.html', context)
+
+def cart(request):
+    cart_items = None
+
+    if request.user.is_authenticated:
+        # Handle cart data for registered users
+        try:
+            if request.user.is_vendor:
+                vendor = Vendor.objects.get(email=request.user)
+            else:
+                vendor = request.user
+        except:
+            vendor = request.user
+
+        total_price = []
+            
+        try:
+            cartData = Cart.objects.get(user=vendor)
+
+            cart_data = cartData.items.all()
+
+            for i in cart_data:
+                total_price.append(i.product.retail_price * i.quantity)
+
+            
+        except:
+            cart_data = 'None'
+
+        try:
+            wishlist12 = Wishlist.objects.get(user=vendor)
+
+            wishlist_items = WishlistItem.objects.filter(wishlist=wishlist12)
+
+            len_wish = len(wishlist_items)
+        except:
+            wishlist_items = None
+            len_wish = 0
+
+        page = 'cart' if request.path == '/cart/' else 'other'
+        
+        context = {
+            "vendor": vendor,
+            'len_wish': len_wish, "wishprods": wishlist_items,
+            'cart_data': cart_data, 'len_cart': len(cart_data), 'total_price': sum(total_price),
+            'page': page
+        }
+        return render(request, 'mainApp/cart.html', context)
+    else:
+        cart_items = request.COOKIES.get('cart_items')
+
+    if cart_items:
+        cart_items = eval(cart_items)  # Convert the string back to a list
+
+        total_price = 0
+        cart_data = []
+        attr_values = []
+
+        for cart_item in cart_items:
+            product = ProductInventory.objects.get(sku=cart_item['sku'])
+            price = product.retail_price * cart_item['quantity']
+            total_price += price
+
+            attribute_values = product.productAttributes.all()
+            if attribute_values.exists():
+                attr_values.append(attribute_values.first().value)
+            
+            cart_data.append({
+                'name': product.product.name,
+                'img_url': product.img_url.url,
+                'quantity': cart_item['quantity'],
+                'fullPrice': price,
+                'price': product.retail_price,
+                'sku': product.sku,
+                "stock": product.stock,
+                'attr_values': attr_values
+            })
+
+        page = 'cart' if request.path == '/cart/' else 'other'
+        context = {"cart_data": cart_data, "total_price": total_price, 'page': page}
+
+    return render(request, 'mainApp/cart.html', context=context)
+
+def checkout_page(request):
+    # Get the product information from the URL parameters
+    products = []
+    total_price = request.GET.get('total_price', '0.00')  # Default value if parameter is not provided
+
+    # Loop through the URL parameters to extract product information
+    for key, value in request.GET.items():
+        if key.startswith('product'):
+            parts = key.split('_')
+            index = parts[1].replace('quantity', '')
+            if len(parts) == 2 and value:
+                product_info = {
+                    'quantity': request.GET.get(f'product_quantity{index}', '0'),
+                    'id': request.GET.get(f'product_id{index}', ''),
+                    'price': request.GET.get(f'product_price{index}', '0.00')
+                }
+                if product_info["price"] != '0.00':
+                    products.append(product_info)
+
+    # Process the product information as needed
+    # For example, you can render a template with this information
+
+    products2 = []
+
+    for i in products:
+        product = ProductInventory.objects.filter(sku=i['id'])
+
+        for j in product:
+            product_info2 = {
+                'name': j.product.name,
+                'img_url': j.img_url.url,
+                'price': j.retail_price,
+                'quantity': i['quantity']
+            }
+            
+            products2.append(product_info2)
+
+    consumer = 'None'
+    if request.user.is_authenticated:
+        consumer = Consumer.objects.get(email=request.user)
+
+    context = {
+        'products': products2,
+        'total_price': total_price,
+        'consumer': consumer
+    }
+    return render(request, 'mainApp/checkout_page.html', context)
+
+"""
+the code below is for ajax requests,
+i tried to separate functions for registered users and functions that are for guest users
+"""
 
 def filter_sub_products_forproduct_detail(request):
     if request.method == 'GET':
@@ -365,32 +450,71 @@ def filter_products_for_collections(request):
 
 def submit_review(request):
     if request.method == 'POST':
-        rating = int(request.POST.get('rating'))
-        comment = request.POST.get('comment')
-        user = request.user
-        product_id = request.POST.get('product_id')
+                # Access the JWT token from the Authorization header
+        auth_header = request.headers.get('Authorization')
+        
+        if auth_header and auth_header.startswith('Bearer '):
+            jwt_token = auth_header.split(' ')[1]
+            
+            try:
+                # Decode the JWT token using the secret key
+                decoded_data = jwt.decode(jwt_token, settings.SECRET_KEY, algorithms=['HS256'])
+                
+                # Access user information from the decoded token
+                user_id = decoded_data.get('user_id')
+                user = Consumer.objects.get(pk=user_id)
 
-        product = Product.objects.get(unique_id=product_id)
+                # Access expiration time from the decoded token
+                expiration_time = decoded_data.get('exp')
+                
+                # Convert expiration time from Unix timestamp to datetime object
+                expiration_datetime = datetime.utcfromtimestamp(expiration_time)
+                
+                # Calculate remaining time until expiration
+                current_datetime = datetime.utcnow()
+                remaining_time = expiration_datetime - current_datetime
+                
+                print("Token expiration time:", expiration_datetime)
+                print("Remaining time until expiration:", remaining_time)
+            
+                if request.POST.get('rating'):
+                    rating = int(request.POST.get('rating'))    
+                else:
+                    rating = 0
 
-        # Save the review
-        review = Review.objects.create(product=product, user=user, rating=rating, comment=sanitize_input(comment))
+                comment = request.POST.get('comment')
+                user = request.user
+                product_id = request.POST.get('product_id')
 
-        # Calculate average rating
-        average_rating = Review.objects.filter(product=product).aggregate(Avg('rating'))['rating__avg']
+                product = Product.objects.get(unique_id=product_id)
 
-        # Update or create rating instance for the product
-        rating_instance, created = Rating.objects.get_or_create(product=product)
-        rating_instance.average_rating = average_rating
-        rating_instance.num_ratings = Review.objects.filter(product=product).count()
-        rating_instance.save()
+                # Save the review
+                review = Review.objects.create(product=product, user=user, rating=rating, comment=sanitize_input(comment))
 
-        return JsonResponse({
-            'user': user.username,
-            'rating': rating,
-            'comment': comment,
-            'average_rating': average_rating,
-            'num_ratings': rating_instance.num_ratings
-        })
+                # Calculate average rating
+                average_rating = Review.objects.filter(product=product).aggregate(Avg('rating'))['rating__avg']
+
+                # Update or create rating instance for the product
+                rating_instance, created = Rating.objects.get_or_create(product=product)
+                rating_instance.average_rating = average_rating
+                rating_instance.num_ratings = Review.objects.filter(product=product).count()
+                rating_instance.save()
+
+                return JsonResponse({
+                    'user': user.username,
+                    'rating': rating,
+                    'comment': comment,
+                    'average_rating': average_rating,
+                    'num_ratings': rating_instance.num_ratings
+                })
+            
+            except jwt.ExpiredSignatureError:
+                return JsonResponse({'error25': 'Token has expired'}, status=401)
+            except jwt.InvalidTokenError:
+                return JsonResponse({'error': 'Invalid token'}, status=401)
+            except Exception as e:
+                traceback_str = traceback.format_exc()
+                return JsonResponse({'error': f'An error occurred: {str(e)},\n Traceback: {traceback_str}'}, status=500)
     else:
         return JsonResponse({'error': 'Invalid request method'}, status=400)
 
@@ -612,7 +736,6 @@ def deleteProduct(request):
                         alternative_sub_products = ProductInventory.objects.filter(product=product, is_default=False)
 
                         if  len(alternative_sub_products) == 0:
-                            print('rame')
                             # Proceed with deleting the product
                             ProductAttributeValues.objects.filter(productinventory=default_sub_product).delete()
                             
@@ -974,3 +1097,243 @@ def add_to_wishlist(request):
     
     return JsonResponse({'success': False, 'message': 'User not authenticated or method not allowed'})
 
+def delete_to_wishlist(request):
+    if request.method == 'POST' and request.user.is_authenticated:
+        product_id = request.POST.get('product_id')
+
+        wishlist12 = Wishlist.objects.get(user=request.user)
+
+        if WishlistItem.objects.filter(product=int(product_id), wishlist=wishlist12):
+            WishlistItem.objects.filter(product=int(product_id), wishlist=wishlist12).delete()
+            return JsonResponse({'success': True, 'message': 'Product Deleted From wishlist'})
+        else:
+            return JsonResponse({'success': False, 'message': 'Error Please Try Again'})
+    
+    return JsonResponse({'success': False, 'message': 'User not authenticated or method not allowed'})
+
+def add_to_cart(request):
+    if request.method == 'POST':
+        quantity = int(request.POST.get('quantity'))
+        sku = request.POST.get('sku')
+
+        l1 = list()
+
+        l1.append(quantity)
+
+        # Initialize an empty list to store cart items
+        cart_items = request.COOKIES.get('cart_items')
+        if cart_items:
+            cart_items = eval(cart_items)  # Convert the string back to a list
+        else:
+            cart_items = []
+
+        # Check if the product is already in the cart
+        product_index = None
+        for index, item in enumerate(cart_items):
+            if item['sku'] == sku:
+                product_index = index
+                break
+            
+        # Set the expiration time to 1 day from now
+        expiration_time = datetime.now() + timedelta(days=1) 
+
+        total_price = 0   
+
+        # If the product is in the cart, update the quantity
+        if product_index is not None:
+            response = JsonResponse({'message_already': 'already in cart'})
+            return response
+        else:
+            # Add a new item to the cart
+            cart_items.append({'sku': sku, 'quantity': quantity})
+        
+            product = ProductInventory.objects.get(sku=sku)
+
+            price = product.retail_price * quantity
+            total_price += price
+
+            # Set the updated cart data in cookies
+            response = JsonResponse({"price": product.retail_price, "sku": product.sku, 'quantity': quantity, "name": product.product.name, "img_url": str(product.img_url.url), 'total_price': total_price, 'unique_id': product.product.unique_id})
+            response.set_cookie('cart_items', cart_items, expires=expiration_time)
+            return response
+    else:
+        return JsonResponse({'error': 'Invalid request method'}, status=400)
+
+def add_to_cart_users(request):
+    if request.method == 'POST':
+
+        # Access the JWT token from the Authorization header
+        auth_header = request.headers.get('Authorization')
+        
+        if auth_header and auth_header.startswith('Bearer '):
+            jwt_token = auth_header.split(' ')[1]
+            
+            try:
+                # Decode the JWT token using the secret key
+                decoded_data = jwt.decode(jwt_token, settings.SECRET_KEY, algorithms=['HS256'])
+                
+                # Access user information from the decoded token
+                user_id = decoded_data.get('user_id')
+                user = Consumer.objects.get(pk=user_id)
+
+                # Access expiration time from the decoded token
+                expiration_time = decoded_data.get('exp')
+                
+                # Convert expiration time from Unix timestamp to datetime object
+                expiration_datetime = datetime.utcfromtimestamp(expiration_time)
+                
+                # Calculate remaining time until expiration
+                current_datetime = datetime.utcnow()
+                remaining_time = expiration_datetime - current_datetime
+                
+                print("Token expiration time:", expiration_datetime)
+                print("Remaining time until expiration:", remaining_time)
+
+                quantity = request.POST.get('quantity')
+                sku = request.POST.get('sku')
+                quantity_cookie = request.POST.get('quantity_cookie')
+                sku_cookie = request.POST.get('sku_cookie')
+
+                cart, created = Cart.objects.get_or_create(user=user)
+
+                total_price = 0   
+
+                if sku_cookie != '[]' and sku_cookie is not None:
+                    sku_cookie = json.loads(sku_cookie)
+                    quantity_cookie = json.loads(quantity_cookie)
+                    skuLen = len(sku_cookie)
+
+                    for i in range(skuLen):
+                        product = ProductInventory.objects.get(sku=sku_cookie[i])
+
+                        cart_item, created2 = CartItem.objects.get_or_create(cart=cart, product=product, quantity=int(quantity_cookie[i]))
+
+                        if not created2:
+                            response = JsonResponse({'message_already': 'already in cart'})
+                            return response
+
+                        price = product.retail_price * int(quantity_cookie[i])
+                        total_price += price
+
+                    return JsonResponse({"good_message": "Your Products Are Added to Cart Please Refresh To see them"})
+                else:
+                    product = ProductInventory.objects.get(sku=sku)
+
+                    alreadyIn_cart = False
+
+                    cart_item6 = CartItem.objects.filter(cart=cart)
+
+                    for item in cart_item6:
+                        if item.product.sku == product.sku:
+                            alreadyIn_cart = True
+                    
+                    if alreadyIn_cart:
+                        response = JsonResponse({'message_already': 'already in cart'})
+                        return response
+
+                    cart_item, created2 = CartItem.objects.get_or_create(cart=cart, product=product, quantity=int(quantity))
+
+                    if cart_item:
+                        cart_item.save()
+
+                    price = product.retail_price * int(quantity)
+                    total_price += price
+
+                    # Set the updated cart data in cookies
+                    response = JsonResponse({"price": product.retail_price, "sku": product.sku, 'quantity': int(quantity), "name": product.product.name, "img_url": str(product.img_url.url), 'total_price': total_price, 'unique_id': product.product.unique_id})
+                    return response
+            
+            except jwt.ExpiredSignatureError:
+                return JsonResponse({'error25': 'Token has expired'}, status=401)
+            except jwt.InvalidTokenError:
+                return JsonResponse({'error': 'Invalid token'}, status=401)
+            except Exception as e:
+                traceback_str = traceback.format_exc()
+                return JsonResponse({'error': f'An error occurred: {str(e)},\n Traceback: {traceback_str}'}, status=500)
+    else:
+        return JsonResponse({'error': 'Invalid request method'}, status=400)
+
+def get_cart_data(request):
+    cart_items = request.COOKIES.get('cart_items')
+
+    if request.user.is_authenticated:
+        if cart_items:
+            cart_items = eval(cart_items)  # Convert the string back to a list
+            cart_products = []
+
+            for cart_item in cart_items:
+                product = ProductInventory.objects.get(sku=cart_item['sku'])
+                
+                cart_products.append({"sku": product.sku, 'quantity': cart_item['quantity']})
+
+            return JsonResponse({'cart_products': cart_products})
+        else:
+            return JsonResponse({'message': 'Cart is empty'})
+    else:
+        if cart_items:
+            cart_items = eval(cart_items)  # Convert the string back to a list
+
+            total_price = 0
+            cart_products = []
+
+            for cart_item in cart_items:
+                product = ProductInventory.objects.get(sku=cart_item['sku'])
+                price = product.retail_price * cart_item['quantity']
+                total_price += price
+                
+                cart_products.append({"prod_price": product.retail_price, "sku": product.sku, 'quantity': cart_item['quantity'], "name": product.product.name, "img_url": str(product.img_url.url), 'unique_id': product.product.unique_id})
+
+            return JsonResponse({'total_price': total_price, 'cart_products': cart_products})
+        else:
+            return JsonResponse({'message': 'Cart is empty'})
+
+def remove_product_from_cart(request):
+    """
+    View to remove a product from the user's cart via AJAX request.
+    """
+
+    # Get the product ID from the POST data
+    product_id = request.POST.get('product_id')
+
+    # Find the cart item associated with the product and the user's cart
+    try:
+        cart_item = CartItem.objects.get(cart__user=request.user, product__sku=product_id)
+        decreased_price = cart_item.product.retail_price * cart_item.quantity
+        cart_item.delete()
+        return JsonResponse({'success': True, 'decreased_price': decreased_price})
+    except:
+        return JsonResponse({'success': False, 'message': 'Product not found in the cart'}, status=404)
+
+def updateCart(request):
+    if request.method == 'POST':
+        qnt = request.POST.get('qnt')
+        prodId = request.POST.get('prodId')  # Assuming the SKU is sent along with the action
+
+        try:
+            cart_item = CartItem.objects.get(cart__user=request.user, product__sku=prodId)
+            cart_item.quantity = int(qnt)
+            cart_item.save()
+            return JsonResponse({'success': True, 'success_message': "Cart Item Update!!"})
+        except:
+            return JsonResponse({'success': False, 'message': 'Product not found in the cart'}, status=404)
+
+def update_cart_guest(request):
+    if request.method == 'POST':
+        cart_items = request.COOKIES.get('cart_items')
+        quantity = request.POST.get('qnt')
+        sku = request.POST.get('prodId')
+
+        if cart_items:
+            cart_items = eval(cart_items)
+            # Find the item in the cart_items list
+            for cart_item in cart_items:
+                if cart_item['sku'] == sku:
+                    cart_item['quantity'] = int(quantity)
+
+            response = JsonResponse({'success': True, 'message': "Cart Item Update!!"})
+            response.set_cookie('cart_items', cart_items)
+            return response
+        else:
+            return JsonResponse({'success': False, 'message': 'Cart is empty'})
+
+    return JsonResponse({'success': False, 'message': 'Invalid request method'})

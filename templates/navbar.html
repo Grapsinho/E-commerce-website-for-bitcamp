@@ -152,9 +152,48 @@
                 {% endif %}
 
                 <li class="nav-item">
-                  <a class="nav-link" href="#">
-                    <i class="fa fa-shopping-cart"></i> Cart (0)
-                  </a>
+                  {% if page == 'cart' %}
+                  <button class="nav-link">
+                    {% if request.user.is_authenticated %}
+                    <i class="fa fa-shopping-cart"></i> Cart (
+                    <!-- -->
+                    {% if cart_data != 'None' %}
+                    <span class="produ_count_cart">{{len_cart}}</span>
+                    {% else %}
+                    <span class="produ_count_cart">0</span>
+                    {% endif %} )
+                    <!-- -->
+                    {% else %}
+                    <i class="fa fa-shopping-cart"></i> Cart (
+                    <!-- -->
+                    <span class="produ_count_cart">0</span> )
+                    <!-- -->
+                    {% endif %}
+                  </button>
+                  {% else %}
+                  <button
+                    class="nav-link"
+                    data-bs-toggle="offcanvas"
+                    data-bs-target="#offcanvasRight"
+                    aria-controls="offcanvasRight"
+                  >
+                    {% if request.user.is_authenticated %}
+                    <i class="fa fa-shopping-cart"></i> Cart (
+                    <!-- -->
+                    {% if cart_data != 'None' %}
+                    <span class="produ_count_cart">{{len_cart}}</span>
+                    {% else %}
+                    <span class="produ_count_cart">0</span>
+                    {% endif %} )
+                    <!-- -->
+                    {% else %}
+                    <i class="fa fa-shopping-cart"></i> Cart (
+                    <!-- -->
+                    <span class="produ_count_cart">0</span> )
+                    <!-- -->
+                    {% endif %}
+                  </button>
+                  {% endif %}
                 </li>
 
                 <div>
@@ -262,27 +301,37 @@
             {% if wishprods %}
             <!---->
             {% for wish in wishprods %}
-            <a
-              href="{% url 'product_detail' wish.product.product.unique_id %}"
-              class="result_a_tag"
-              style="display: flex; align-items: center"
-              ><img
-                src="/static/images/{{wish.product.img_url}}"
-                alt=""
-                style="max-width: 70px"
-              />
-              <span
-                class="result-span"
-                style="display: flex; flex-direction: column"
+            <div class="d-flex-sm mb-2">
+              <a
+                href="{% url 'product_detail' wish.product.product.unique_id %}"
+                class="result_a_tag"
+                style="display: flex; align-items: center"
+                ><img
+                  src="/static/images/{{wish.product.img_url}}"
+                  alt=""
+                  style="max-width: 70px"
+                />
+                <span
+                  class="result-span"
+                  style="display: flex; flex-direction: column"
+                >
+                  <span style="color: black">
+                    {{wish.product.product.name}}
+                  </span>
+                  <span class="price" style="color: black">
+                    $ {{wish.product.retail_price}}
+                  </span>
+                </span>
+              </a>
+
+              <div
+                class="p-2 wish_delete"
+                style="background-color: red; cursor: pointer"
+                data-count="{{wish.product.pk}}"
               >
-                <span style="color: black">
-                  {{wish.product.product.name}}
-                </span>
-                <span class="price" style="color: black">
-                  $ {{wish.product.retail_price}}
-                </span>
-              </span>
-            </a>
+                <i class="bi bi-trash text-light"></i>
+              </div>
+            </div>
             {% endfor %} {% else %}
 
             <p>You Don't Have Any Wished Products Yet.</p>
@@ -301,6 +350,106 @@
         </div>
       </div>
     </div>
+
+    {% if request.user.is_authenticated %}
+    <div class="for_offcanvas">
+      <div
+        class="offcanvas offcanvas-end canva_cart"
+        tabindex="-1"
+        id="offcanvasRight"
+        aria-labelledby="offcanvasRightLabel"
+      >
+        <div class="offcanvas-header">
+          <h5 class="offcanvas-title" id="offcanvasRightLabel">Your Cart</h5>
+          <button
+            type="button"
+            class="btn-close magariButton"
+            data-bs-dismiss="offcanvas"
+            aria-label="Close"
+          ></button>
+        </div>
+        <div class="offcanvas-body off_body_forProd">
+          {% if cart_data != 'None' %}
+          <!-- -->
+          <div class="d-flex align-items-center gap-3 mb-2">
+            <p>Sum: <span class="cart_sum">{{total_price}}</span>$</p>
+
+            <a href="{% url 'cart' %}" class="btn btn-warning">See Cart</a>
+          </div>
+          {% for prod in cart_data %}
+
+          <div style="margin-bottom: 1rem">
+            <a
+              href="{% url 'product_detail' prod.product.product.unique_id %}"
+              class="result_a_tag"
+              style="display: flex; align-items: center"
+              ><img
+                src="/static{{prod.product.img_url.url}}"
+                alt=""
+                style="max-width: 70px"
+              />
+              <span
+                class="result-span"
+                style="display: flex; flex-direction: column"
+              >
+                <span style="color: black">
+                  {{prod.product.product.name}}
+                </span>
+                <span class="price_prod" style="color: black">
+                  {{prod.product.retail_price}}$
+                </span>
+                <span class="quantity" style="color: black"
+                  >Quantity: {{prod.quantity}}
+                </span>
+              </span>
+            </a>
+
+            <div
+              class="p-2 prod_cart_delete"
+              style="background-color: red; cursor: pointer; text-align: center"
+              data-count="{{prod.product.sku}}"
+            >
+              <i class="bi bi-trash text-light"></i>
+            </div>
+          </div>
+
+          {% endfor %}
+          <!-- -->
+          {% else %}
+          <span class="cart_empt"> Your Cart Is Empty </span>
+
+          <p>Sum: <span class="cart_sum">0</span></p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% else %}
+    <div
+      class="offcanvas offcanvas-end canva_cart"
+      tabindex="-1"
+      id="offcanvasRight"
+      aria-labelledby="offcanvasRightLabel"
+    >
+      <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="offcanvasRightLabel">Your Cart</h5>
+        <button
+          type="button"
+          class="btn-close magariButton"
+          data-bs-dismiss="offcanvas"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="offcanvas-body off_body_forProd">
+        <span class="cart_empt"> Your Cart Is Empty </span>
+
+        <div class="d-flex align-items-center gap-3 mb-2">
+          <p>Sum: <span class="cart_sum">{{total_price}}</span>$</p>
+
+          <a href="{% url 'cart' %}" class="btn btn-warning">See Cart</a>
+        </div>
+      </div>
+    </div>
+    {% endif %}
 
     <script src="{% static 'js/search1.js' %}"></script>
   </body>

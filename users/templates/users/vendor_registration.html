@@ -97,7 +97,7 @@
           contentType: "application/json",
           data: JSON.stringify({
             "email": sanitizeInput(emailVal),
-            "shop_name": sanitizeInput(shop_nameVal),
+            "shop_name": sanitizeInput(shop_nameVal).replace(/['"]/g, ""),
             "password": sanitizeInput(pass1Val),
           }),
           success: function (data) {

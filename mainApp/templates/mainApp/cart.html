@@ -1,0 +1,155 @@
+{% extends 'mainApp/main.html' %} {% load static %} {% block page_title %}
+Shopping Cart {% endblock %} {% block css %}
+<link
+  rel="stylesheet"
+  href="{% static 'css/cart1.css' %}"
+  type="text/css"
+  media="screen"
+/>
+
+{% endblock %} {% block content %}
+<!-- -->
+{% load custom_filters %}
+<div class="container">
+  <section id="cart" class="section-p11 mb-3">
+    <table width="100%">
+      <thead>
+        <tr>
+          <td>Remove</td>
+          <td>Choose</td>
+          <td>Image</td>
+          <td>Product</td>
+          <td>Pirce</td>
+          <td>Quantity</td>
+          <td>Attribute</td>
+          <td>SubTotal</td>
+        </tr>
+      </thead>
+      <tbody class="cartContainer">
+        {% if request.user.is_authenticated %}
+        <!-- -->
+        {% if cart_data != 'None' %}
+        <!-- -->
+        {% for prod in cart_data %}
+
+        <tr class="tr_for_cart">
+          <td>
+            <a
+              style="cursor: pointer"
+              class="deleteBtn"
+              data-count="{{prod.product.sku}}"
+              ><i class="far fa-times-circle"></i
+            ></a>
+          </td>
+          <td>
+            <input
+              type="checkbox"
+              class="need_inp which_to_buy"
+              name="which_product_buy"
+              id="which_product_buy"
+            />
+          </td>
+          <td><img src="/static{{prod.product.img_url.url}}" alt="" /></td>
+          <td>{{prod.product.product.name}}</td>
+          <td class="productPrice need_inp" data-prodid="{{prod.product.sku}}">
+            $<span class="product_price">{{prod.product.retail_price}}</span>
+          </td>
+          <td>
+            <input
+              data-prodid="{{prod.product.sku}}"
+              data-first_qnt="{{prod.quantity}}"
+              class="onCartInput need_inp"
+              type="number"
+              value="{{prod.quantity}}"
+              min="1"
+              max="{{prod.product.stock}}"
+            />
+          </td>
+          <td>{{prod.get_attr_value}}</td>
+          <td class="amountPrice need_inp">
+            $<span class="one_prod-sum">{{prod.get_total}}</span>
+          </td>
+        </tr>
+
+        {% endfor %}
+        <!-- -->
+        {% else %}
+        <h1 class="cart_empt">Your Cart Is Empty</h1>
+        {% endif %}
+        <!-- -->
+        {% else %} {% for prod in cart_data %}
+
+        <tr class="tr_for_cart">
+          <td>
+            <a
+              style="cursor: pointer"
+              class="deleteBtn"
+              data-count="{{prod.sku}}"
+              ><i class="far fa-times-circle"></i
+            ></a>
+          </td>
+          <td>
+            <input
+              type="checkbox"
+              class="need_inp which_to_buy"
+              name="which_product_buy"
+              id="which_product_buy"
+            />
+          </td>
+          <td><img src="/static{{prod.img_url}}" alt="" /></td>
+          <td>{{prod.name}}</td>
+          <td class="productPrice need_inp" data-prodid="{{prod.sku}}">
+            $<span class="product_price">{{prod.price}}</span>
+          </td>
+          <td>
+            <input
+              data-prodid="{{prod.sku}}"
+              data-first_qnt="{{prod.quantity}}"
+              class="onCartInput need_inp"
+              type="number"
+              value="{{prod.quantity}}"
+              min="1"
+              max="{{prod.stock}}"
+            />
+          </td>
+          <td>{{prod.attr_values|index:forloop.counter0}}</td>
+          <td class="amountPrice need_inp">
+            $<span class="one_prod-sum">{{prod.fullPrice}}</span>
+          </td>
+        </tr>
+
+        {% endfor %} {% endif %}
+      </tbody>
+    </table>
+  </section>
+
+  <button
+    class="btn btn-success mb-3 d-none save_changes"
+    style="transition: all 0.3s"
+  >
+    Save Changes
+  </button>
+
+  <div id="subtotal">
+    <h3>Cart Totals</h3>
+    <table>
+      <tr>
+        <td>Shopping</td>
+        <td>Free</td>
+      </tr>
+      <tr>
+        <td><strong>Total</strong></td>
+        <td>
+          <strong class="priceTotal"
+            >$<span class="totalPriceCart">{{total_price}}</span>
+          </strong>
+        </td>
+      </tr>
+    </table>
+    <button class="normal checkout_process">Proceed to checkout</button>
+  </div>
+</div>
+
+{% block scripts %}
+<script src="{% static 'js/cart.js' %}"></script>
+{% endblock scripts %} {% endblock %}

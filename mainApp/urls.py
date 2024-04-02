@@ -7,8 +7,19 @@ urlpatterns = [
     path("product_detail/<str:sku>/", product_detail, name="product_detail"),
     path("dashboard/<str:sku>/", dashboard, name="dashboard"),
     path("update_product/<str:sku>/", update_product, name="update_product"),
+
+    path('cart/', cart, name='cart'),
+    path('add_to_cart/', add_to_cart, name='add_to_cart'),
+    path('add_to_cart_users/', add_to_cart_users, name='add_to_cart_users'),
+    path('get_cart_data/', get_cart_data, name='get_cart_data'),
+    path('remove_product_from_cart/', remove_product_from_cart, name='remove_product_from_cart'),
+    path('updateCart/', updateCart, name='updateCart'),
+    path('update_cart_guest/', update_cart_guest, name='update_cart_guest'),
+
+    path('cart/checkout_page/', checkout_page, name='checkout_page'),
     
     path('deleteProduct/', deleteProduct, name='deleteProduct'),
+    path('delete_to_wishlist/', delete_to_wishlist, name='delete_to_wishlist'),
     path("add_to_wishlist/", add_to_wishlist, name="add_to_wishlist"),
     path('update_product_ajax/', update_product_ajax, name='update_product_ajax'),
     path('delete_default_product/', delete_default_product, name='delete_default_product'),

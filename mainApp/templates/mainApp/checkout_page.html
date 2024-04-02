@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Checkout Page</title>
+
+    <link rel="stylesheet" href="{% static 'css/checkout1.css' %}" />
+  </head>
+  <body>
+    <header style="display: flex; gap: 2rem; align-items: center">
+      <h3>Checkout</h3>
+
+      <a href="{% url 'cart' %}">Go To Cart</a>
+    </header>
+    <main>
+      <section class="checkout-form">
+        <form action="#!" method="get" style="padding-bottom: 2rem !important">
+          <h6>Contact information</h6>
+          <div class="form-control">
+            <label for="checkout-email">E-mail</label>
+            <div>
+              <span class="fa fa-envelope"></span>
+              {% if consumer == 'None' %}
+              <input
+                type="email"
+                id="checkout-email"
+                name="checkout-email"
+                placeholder="Enter your email..."
+              />
+              {% else %}
+              <input
+                type="email"
+                id="checkout-email"
+                name="checkout-email"
+                placeholder="Enter your email..."
+                value="{{consumer.email}}"
+              />
+              {% endif %}
+            </div>
+          </div>
+          <div class="form-control">
+            <label for="checkout-phone">Phone</label>
+            <div>
+              <span class="fa fa-phone"></span>
+              <input
+                type="tel"
+                name="checkout-phone"
+                id="checkout-phone"
+                placeholder="Enter you phone..."
+              />
+            </div>
+          </div>
+          <br />
+          <h6>Shipping address</h6>
+          <div class="form-control">
+            <label for="checkout-name">Full name</label>
+            <div>
+              <span class="fa fa-user-circle"></span>
+              <input
+                type="text"
+                id="checkout-name"
+                name="checkout-name"
+                placeholder="Enter you name..."
+              />
+            </div>
+          </div>
+          <div class="form-control">
+            <label for="checkout-address">Address</label>
+            <div>
+              <span class="fa fa-home"></span>
+              <input
+                type="text"
+                name="checkout-address"
+                id="checkout-address"
+                placeholder="Your address..."
+              />
+            </div>
+          </div>
+          <div class="form-control">
+            <label for="checkout-city">City</label>
+            <div>
+              <span class="fa fa-building"></span>
+              <input
+                type="text"
+                name="checkout-city"
+                id="checkout-city"
+                placeholder="Your city..."
+              />
+            </div>
+          </div>
+          <div class="form-control">
+            <label for="checkout-postal">Postal code</label>
+            <div>
+              <span class="fa fa-archive"></span>
+              <input
+                type="numeric"
+                name="checkout-postal"
+                id="checkout-postal"
+                placeholder="Your postal code..."
+              />
+            </div>
+          </div>
+          <div class="form-control-btn">
+            <button>Checkout</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="checkout-details">
+        <div class="checkout-details-inner">
+          <div class="checkout-lists">
+            {% for prod in products %}
+            <div class="card">
+              <div class="card-image">
+                <img src="/static{{prod.img_url}}" alt="" />
+              </div>
+              <div class="card-details">
+                <div class="card-name">{{prod.name}}</div>
+                <div class="card-price">
+                  $<span class="prod_price">{{prod.price}}</span>
+                </div>
+
+                <div class="quantity" style="margin-top: 1rem; font-size: 15px">
+                  Quantity: {{prod.quantity}}
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          <div class="checkout-shipping">
+            <h6>Shipping</h6>
+            <p>Free</p>
+          </div>
+          <div class="checkout-total">
+            <h6>Total</h6>
+            <p>$<span>{{total_price}}</span></p>
+          </div>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

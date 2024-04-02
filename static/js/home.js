@@ -51,12 +51,13 @@ $(document).ready(function () {
         // Clear the product list before appending new data
         $("#product_list").empty();
 
-        for (var i = 0; i < products.length; i++) {
-          var product = products[i];
+        if (document.querySelector(".wish_count")) {
+          for (var i = 0; i < products.length; i++) {
+            var product = products[i];
 
-          // Perform an action for each product, such as displaying it
-          $("#product_list").append(
-            `
+            // Perform an action for each product, such as displaying it
+            $("#product_list").append(
+              `
               <div class="col-md-6 col-lg-4 col-xl-3">
                 <div class="product">
                   <img src="${product.img_url}" alt="Product Image" />
@@ -84,45 +85,76 @@ $(document).ready(function () {
             </div>
 
             `
-          );
-        }
+            );
+          }
 
-        const heart_wish = document.querySelectorAll(".heart_wish");
-        const wish_count = document.querySelector(".wish_count");
-        let count_wish = parseInt(wish_count.textContent);
+          const heart_wish = document.querySelectorAll(".heart_wish");
+          const wish_count = document.querySelector(".wish_count");
+          let count_wish = parseInt(wish_count.textContent);
 
-        wish_count.textContent = count_wish;
+          wish_count.textContent = count_wish;
 
-        heart_wish.forEach((element1234) => {
-          element1234.addEventListener("click", () => {
-            element1234.classList.remove("btn-secondary");
-            element1234.classList.add("btn-danger");
+          heart_wish.forEach((element1234) => {
+            element1234.addEventListener("click", () => {
+              element1234.classList.remove("btn-secondary");
+              element1234.classList.add("btn-danger");
 
-            $.ajax({
-              type: "POST",
-              url: "/add_to_wishlist/",
-              headers: {
-                "X-CSRFToken": csrftoken,
-              },
-              data: {
-                "product_id": element1234.dataset.uniq,
-              },
-              success: function (response) {
-                console.log(response);
-                count_wish++;
-                if (response.success) {
-                  wish_count.textContent = count_wish;
-                } else {
-                  alert(response.message);
-                }
-              },
-              error: function (xhr, status, error) {
-                alert("Error occurred while adding product to wishlist.");
-                console.error(xhr.responseText);
-              },
+              $.ajax({
+                type: "POST",
+                url: "/add_to_wishlist/",
+                headers: {
+                  "X-CSRFToken": csrftoken,
+                },
+                data: {
+                  "product_id": element1234.dataset.uniq,
+                },
+                success: function (response) {
+                  console.log(response);
+                  count_wish++;
+                  if (response.success) {
+                    wish_count.textContent = count_wish;
+                  } else {
+                    alert(response.message);
+                  }
+                },
+                error: function (xhr, status, error) {
+                  alert("Error occurred while adding product to wishlist.");
+                  console.error(xhr.responseText);
+                },
+              });
             });
           });
-        });
+        } else {
+          for (var i = 0; i < products.length; i++) {
+            var product = products[i];
+
+            // Perform an action for each product, such as displaying it
+            $("#product_list").append(
+              `
+              <div class="col-md-6 col-lg-4 col-xl-3">
+                <div class="product">
+                  <img src="${product.img_url}" alt="Product Image" />
+                  <div class="product-info">
+                  <div class="d-flex" style="align-items: center;
+                  justify-content: space-between;">
+                    <div>
+                      <h2>${product.name}</h2>
+                      <p class="price">$${product.price}</p>
+                    </div>
+                  </div>
+                  <a
+                    href="${location.protocol}//${location.host}/product_detail/${product.unique_id}/"
+                    class="btn15"
+                    >See Product</a
+                  >
+                </div>
+                </div>
+            </div>
+
+            `
+            );
+          }
+        }
       },
     });
   }

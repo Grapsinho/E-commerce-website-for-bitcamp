@@ -3,7 +3,7 @@ const update_product_modal_btn = document.querySelectorAll(
   "#update_product_modal-btn"
 );
 
-const jwtToken = localStorage.getItem("access_token");
+let jwtToken = localStorage.getItem("access_token");
 
 function getCookie(name) {
   var cookieValue = null;
@@ -27,7 +27,10 @@ delete_btn.forEach((element) => {
   element.addEventListener("click", () => {
     let is_default = element.dataset.default == "False" ? false : true;
 
+    jwtToken = localStorage.getItem("access_token");
+
     if (is_default) {
+      console.log("aq aris exla");
       // If the product is default, show a modal to choose the next default product
       $.ajax({
         type: "POST",
@@ -42,7 +45,9 @@ delete_btn.forEach((element) => {
           "uniqueId": element.dataset.uniqueid,
         },
         success: function (response) {
+          console.log("aq aris exla");
           if (response.warning && response.alternatives) {
+            console.log("aq aris exla2");
             $(".bots_modal").modal("hide");
 
             // Display a modal with the warning message and options to choose the next default product
@@ -90,12 +95,14 @@ delete_btn.forEach((element) => {
                 });
               });
             });
+          } else {
+            window.location.href = "/";
           }
         },
         error: function (xhr, status, error) {
           console.error(xhr.responseText);
 
-          if (error.responseText.error25 == "Token has expired") {
+          if (xhr.responseText == '{"error25": "Token has expired"}') {
             $.ajax({
               url: `${location.protocol}//${location.host}/auth/jwt/refresh/`,
               type: "POST",
@@ -112,25 +119,7 @@ delete_btn.forEach((element) => {
 
                 ////////////////////////////////////////////////////
                 // when we refresh token we sending one more request
-                $.ajax({
-                  type: "POST",
-                  url: "/deleteProduct/",
-                  headers: {
-                    "X-CSRFToken": csrftoken,
-                    "Authorization": `Bearer ${jwtToken}`,
-                  },
-                  data: {
-                    "sku": element.dataset.sku,
-                    "default": element.dataset.default,
-                  },
-                  success: function (response) {
-                    var products = response;
-                    console.log(products);
-                  },
-                  error: function (error) {
-                    console.error(error);
-                  },
-                });
+                alert("Try Again!!");
               },
               error: function (error) {
                 console.error(error);
@@ -159,7 +148,7 @@ delete_btn.forEach((element) => {
         error: function (xhr, status, error) {
           console.error(xhr.responseText);
 
-          if (error.responseJSON.error == "Token has expired") {
+          if (xhr.responseText == '{"error25": "Token has expired"}') {
             $.ajax({
               url: `${location.protocol}//${location.host}/auth/jwt/refresh/`,
               type: "POST",
@@ -186,13 +175,13 @@ delete_btn.forEach((element) => {
                   data: {
                     "sku": element.dataset.sku,
                     "default": element.dataset.default,
+                    "uniqueId": element.dataset.uniqueid,
                   },
                   success: function (response) {
-                    var products = response;
-                    console.log(products);
+                    window.location.href = "/";
                   },
-                  error: function (error) {
-                    console.error(error);
+                  error: function (xhr, status, error) {
+                    alert(`Error! ${xhr.status}: ${xhr.responseJSON}`);
                   },
                 });
               },
