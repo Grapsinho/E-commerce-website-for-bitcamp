@@ -94,7 +94,7 @@ $(document).ready(function () {
 
           wish_count.textContent = count_wish;
 
-          heart_wish.forEach((element1234) => {
+          heart_wish.forEach((element1234, index) => {
             element1234.addEventListener("click", () => {
               element1234.classList.remove("btn-secondary");
               element1234.classList.add("btn-danger");
@@ -113,6 +113,42 @@ $(document).ready(function () {
                   count_wish++;
                   if (response.success) {
                     wish_count.textContent = count_wish;
+
+                    $(".no-products_inwish").addClass("d-none");
+
+                    $(".wish_mod_body").prepend(`
+                          <div class="d-flex-sm mb-2">
+                            <a
+                              href="${location.protocol}//${location.host}/product_detail/${response.product_unique_id}/"
+                              class="result_a_tag"
+                              style="display: flex; align-items: center"
+                              ><img
+                                src="/static${response.image}"
+                                alt=""
+                                style="max-width: 70px"
+                              />
+                              <span
+                                class="result-span"
+                                style="display: flex; flex-direction: column"
+                              >
+                                <span style="color: black">
+                                ${response.product_name}
+                                </span>
+                                <span class="price" style="color: black">
+                                  $ ${response.price}
+                                </span>
+                              </span>
+                            </a>
+
+                            <div
+                              class="p-2 wish_delete wish_delete${response.product_id}"
+                              style="background-color: red; cursor: pointer"
+                              data-count="${response.product_id}"
+                            >
+                              <i class="bi bi-trash text-light"></i>
+                            </div>
+                          </div>
+                    `);
                   } else {
                     alert(response.message);
                   }

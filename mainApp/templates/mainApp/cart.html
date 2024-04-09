@@ -55,15 +55,33 @@ Shopping Cart {% endblock %} {% block css %}
             $<span class="product_price">{{prod.product.retail_price}}</span>
           </td>
           <td>
-            <input
+            <select
+              id="product_stock"
               data-prodid="{{prod.product.sku}}"
               data-first_qnt="{{prod.quantity}}"
-              class="onCartInput need_inp"
-              type="number"
-              value="{{prod.quantity}}"
-              min="1"
-              max="{{prod.product.stock}}"
-            />
+              class="need_inp"
+            >
+              {% for i in "x"|rjust:prod.product.stock %}
+              <!-- {{prod.quantity}} -->
+              {% if forloop.counter == prod.quantity %}
+              <option
+                data-prodid="{{prod.product.sku}}"
+                value="{{forloop.counter}}"
+                selected
+              >
+                {{forloop.counter}}
+              </option>
+              {% else %}
+              <option
+                data-prodid="{{prod.product.sku}}"
+                value="{{forloop.counter}}"
+              >
+                {{forloop.counter}}
+              </option>
+              {% endif %}
+              <!-- -->
+              {% endfor %}
+            </select>
           </td>
           <td>{{prod.get_attr_value}}</td>
           <td class="amountPrice need_inp">
@@ -102,15 +120,30 @@ Shopping Cart {% endblock %} {% block css %}
             $<span class="product_price">{{prod.price}}</span>
           </td>
           <td>
-            <input
+            <select
+              id="product_stock"
               data-prodid="{{prod.sku}}"
               data-first_qnt="{{prod.quantity}}"
-              class="onCartInput need_inp"
-              type="number"
-              value="{{prod.quantity}}"
-              min="1"
-              max="{{prod.stock}}"
-            />
+              class="need_inp"
+            >
+              {% for i in "x"|rjust:prod.stock %}
+              <!-- -->
+              {% if forloop.counter == prod.quantity %}
+              <option
+                data-prodid="{{prod.sku}}"
+                value="{{forloop.counter}}"
+                selected
+              >
+                {{forloop.counter}}
+              </option>
+              {% else %}
+              <option data-prodid="{{prod.sku}}" value="{{forloop.counter}}">
+                {{forloop.counter}}
+              </option>
+              {% endif %}
+              <!-- -->
+              {% endfor %}
+            </select>
           </td>
           <td>{{prod.attr_values|index:forloop.counter0}}</td>
           <td class="amountPrice need_inp">
@@ -151,5 +184,5 @@ Shopping Cart {% endblock %} {% block css %}
 </div>
 
 {% block scripts %}
-<script src="{% static 'js/cart.js' %}"></script>
+<script src="{% static 'js/cart26.js' %}"></script>
 {% endblock scripts %} {% endblock %}

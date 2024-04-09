@@ -279,6 +279,7 @@
       </div>
     </div>
 
+    {% if request.user.is_authenticated %}
     <div
       class="modal fade"
       id="wishproductss"
@@ -297,7 +298,7 @@
               aria-label="Close"
             ></button>
           </div>
-          <div class="modal-body">
+          <div class="modal-body wish_mod_body">
             {% if wishprods %}
             <!---->
             {% for wish in wishprods %}
@@ -334,7 +335,9 @@
             </div>
             {% endfor %} {% else %}
 
-            <p>You Don't Have Any Wished Products Yet.</p>
+            <p class="no-products_inwish">
+              You Don't Have Any Wished Products Yet.
+            </p>
             <!---->
             {% endif %}
           </div>
@@ -350,7 +353,8 @@
         </div>
       </div>
     </div>
-
+    {% endif %}
+    <!-- -->
     {% if request.user.is_authenticated %}
     <div class="for_offcanvas">
       <div

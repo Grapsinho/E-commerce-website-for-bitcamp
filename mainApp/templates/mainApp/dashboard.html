@@ -274,15 +274,15 @@
       <!-- End Main -->
     </div>
 
-    {{prod_1|json_script:'firstProd1'}} {{prod_2|json_script:'secondProd2'}}
-    {{prod_3|json_script:'thirdProd3'}} {{prod_4|json_script:'fourthProd4'}}
-    {{prod_5|json_script:'fifthProd5'}}
+    {% if prod_1 %} {{prod_1|json_script:'firstProd1'}}
+    {{prod_2|json_script:'secondProd2'}} {{prod_3|json_script:'thirdProd3'}}
+    {{prod_4|json_script:'fourthProd4'}} {{prod_5|json_script:'fifthProd5'}}
     <!--     -->
     {{rprod_1|json_script:'firstProd241'}}
     {{rprod_2|json_script:'secondProd252'}}
     {{rprod_3|json_script:'thirdProd263'}}
     {{rprod_4|json_script:'fourthProd274'}}
-    {{rprod_5|json_script:'fifthProd285'}}
+    {{rprod_5|json_script:'fifthProd285'}} {% endif %}
 
     <!-- Scripts -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>

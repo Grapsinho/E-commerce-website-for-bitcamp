@@ -55,6 +55,78 @@
     flex-direction: row;
     flex-wrap: wrap;
   }
+
+  /* comments */
+  .comment-section {
+    padding: 20px;
+    background-color: #f9f9f9;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    margin-bottom: 20px;
+  }
+
+  /* Styling for the reviews heading */
+  .comment-section h2 {
+    margin-top: 0;
+    font-size: 24px;
+    color: #333;
+  }
+
+  /* Styling for the reviews list */
+  .review-item {
+    margin-bottom: 20px;
+    padding: 10px;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    list-style: none;
+    transition: all 0.3s;
+  }
+
+  /* Styling for user info */
+  .user-info {
+    margin-bottom: 5px;
+    font-weight: bold;
+  }
+
+  /* Styling for user name */
+  .user-name {
+    color: #007bff; /* Blue color for username */
+  }
+
+  /* Styling for rating */
+  .rating {
+    margin-bottom: 5px;
+  }
+
+  /* Styling for comment */
+  .comment {
+    color: #555;
+  }
+
+  /* Styling for 'No reviews yet' message */
+  .no-reviews {
+    font-style: italic;
+    color: #777;
+  }
+
+  .comment_deleted_popUp {
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+  }
+
+  .comment_deleted_popUp.show {
+    /* Visible state */
+    opacity: 1;
+  }
+
+  .comment_deleted_popUp.hide {
+    /* Hidden state */
+    opacity: 0;
+  }
 </style>
 
 {% endblock %} {% block content %}
@@ -235,23 +307,40 @@
   <h4>Please log in to leave a review.</h4>
   {% endif %}
 
-  <h2>Reviews:</h2>
-  <ul id="reviews-list" class="mb-4">
-    {% for review in reviews %}
-    <li>
-      <p>User: {{ review.user.username }}</p>
-      <p>Rating: {{ review.rating }}</p>
-      <p>Comment: {{ review.comment }}</p>
-    </li>
-    {% empty %}
-    <li>No reviews yet.</li>
-    {% endfor %}
-  </ul>
+  <div class="comment-section">
+    <h2>Reviews:</h2>
+    <ul id="reviews-list" class="mb-4">
+      {% for review in reviews %}
+      <li class="review-item">
+        <p class="user-info">
+          User: <span class="user-name">{{ review.user.username }}</span>
+        </p>
+        <p class="rating">Rating: {{ review.rating }}</p>
+        <p class="comment">Comment: {{ review.comment }}</p>
+
+        {% if request.user == review.user %}
+        <button
+          class="delete_comment btn btn-danger"
+          data-commPk="{{review.pk}}"
+        >
+          Delete
+        </button>
+        {% endif %}
+      </li>
+      {% empty %}
+      <li>No reviews yet.</li>
+      {% endfor %}
+    </ul>
+  </div>
 </section>
+
+<div class="alert alert-danger comment_deleted_popUp hide" role="alert">
+  Review deleted successfully!!
+</div>
 
 {{rec_data1|json_script:'attributes_values'}}
 {{average_rating|json_script:'avg_rating'}} {{sku|json_script:'sku_for_prod'}}
 <!--  -->
 {% block scripts %}
-<script src="{% static 'js/product_dtl1.js' %}"></script>
+<script src="{% static 'js/product_detail.js' %}"></script>
 {% endblock scripts %} {% endblock %}

@@ -207,7 +207,7 @@ class Review(models.Model):
         return f"Review for {self.product.name} by {self.user.username}"
     
 class Rating(models.Model):
-    product = models.OneToOneField(Product, on_delete=models.CASCADE, related_name='rating')
+    product = models.OneToOneField(Product, on_delete=models.CASCADE, related_name='ratings')
     average_rating = models.DecimalField(max_digits=3, decimal_places=2, default=0.00)
     num_ratings = models.IntegerField(default=0)
 

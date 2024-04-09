@@ -152,6 +152,7 @@ if (cartItems && document.getElementById("wishproducts")) {
       type: "GET",
       url: "/get_cart_data/",
       success: function (data) {
+        console.log(data);
         if (!data.message) {
           for (let index = 0; index < data.cart_products.length; index++) {
             const element = data.cart_products[index];
@@ -245,7 +246,7 @@ if (cartItems && document.getElementById("wishproducts")) {
         }
       },
       error: function (xhr, status, error) {
-        console.error(xhr.responseText);
+        console.error(error);
       },
     });
   }
@@ -289,34 +290,45 @@ if (document.getElementById("wishproducts")) {
   });
 }
 
-const wish_delete = document.querySelectorAll(".wish_delete");
+$(document).on("click", ".wish_delete", function () {
+  const wish_delete = document.querySelectorAll(".wish_delete");
+  let count_wish = wish_delete.length;
 
-wish_delete.forEach((element) => {
-  element.addEventListener("click", () => {
-    element.parentElement.remove();
-    $.ajax({
-      type: "POST",
-      url: "/delete_to_wishlist/",
-      headers: {
-        "X-CSRFToken": csrftoken,
-      },
-      data: {
-        "product_id": element.dataset.count,
-      },
-      success: function (response) {
-        console.log(response);
-        count_wish--;
+  const delete_bnt_wish = $(this);
 
-        if (response.success) {
-          wish_count.textContent = count_wish;
-        } else {
-          alert(response.message);
+  let itsOk = true;
+  const wish_count = document.querySelector(".wish_count");
+
+  $.ajax({
+    type: "POST",
+    url: "/delete_to_wishlist/",
+    headers: {
+      "X-CSRFToken": csrftoken,
+    },
+    data: {
+      "product_id": delete_bnt_wish.data("count"),
+    },
+    success: function (response) {
+      console.log(response);
+
+      delete_bnt_wish.parent().remove();
+
+      count_wish--;
+
+      if (response.success) {
+        wish_count.textContent = count_wish;
+
+        if (count_wish < 1 && itsOk) {
+          $(".modal-body").append("You Don't Have Any Wished Products Yet.");
+          itsOk = false;
         }
-      },
-      error: function (xhr, status, error) {
-        alert("Error occurred while deleting product from wishlist.");
-        console.error(xhr.responseText);
-      },
-    });
+      } else {
+        alert(response.message);
+      }
+    },
+    error: function (xhr, status, error) {
+      alert("Error occurred while deleting product from wishlist.");
+      console.error(xhr.responseText);
+    },
   });
 });

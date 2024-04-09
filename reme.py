@@ -32,6 +32,8 @@ boj1 = {
     'product_id_1': {'product_sku': '324234', 'product_price': '234324', 'product_stock': '234234', 'attr_asd': 'asd', 'attr_asdasd': 'asdas'}
 }
 
+
+
 rame = False
 
 if not rame:

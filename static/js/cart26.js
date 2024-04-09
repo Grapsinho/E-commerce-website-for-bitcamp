@@ -43,7 +43,7 @@ $(document).ready(function () {
     });
   }
 
-  const quantity_inp = document.querySelectorAll(".onCartInput");
+  const quantity_inp = document.querySelectorAll("#product_stock");
   const save_CH = document.querySelector(".save_changes");
   const checkout_process = document.querySelector(".checkout_process");
   const tr_for_cart = document.querySelectorAll(".tr_for_cart");
@@ -118,61 +118,63 @@ $(document).ready(function () {
     $(document).on("click", ".save_changes", () => {
       let isValid = true;
       let new_price = [];
+      let updatedQuantities = {}; // Object to store updated quantities
 
       let productPrice2 = document.querySelectorAll(".product_price");
-      let quantity_inp2 = document.querySelectorAll(".onCartInput");
+      let quantity_inp2 = document.querySelectorAll("#product_stock");
       let tr_for_cart2 = document.querySelectorAll(".tr_for_cart");
 
       for (let index = 0; index < tr_for_cart2.length; index++) {
         const qnt = quantity_inp2[index];
         const prod_price = productPrice2[index];
 
-        let arr1 = [];
+        if (parseInt(qnt.value) !== parseInt(qnt.dataset.first_qnt)) {
+          // If the quantity has changed, add it to updatedQuantities object
+          updatedQuantities[qnt.dataset.prodid] = parseInt(qnt.value);
 
-        if (qnt.value === qnt.dataset.first_qnt) {
-          new_price.push(
-            parseFloat(prod_price.textContent) * parseInt(qnt.value)
-          );
-        } else {
-          new_price.push(
-            parseFloat(prod_price.textContent) * parseInt(qnt.value)
-          );
-
-          $.ajax({
-            type: "POST",
-            url: "/update_cart_guest/",
-            headers: {
-              "X-CSRFToken": csrftoken,
-            },
-            data: {
-              "qnt": qnt.value,
-              "prodId": qnt.dataset.prodid,
-            },
-            success: function (data) {
-              if (data.message && isValid) {
-                alert(data.message);
-                isValid = false;
-              }
-
-              one_prod_sum[index].textContent = (
-                parseFloat(prod_price.textContent) * parseInt(qnt.value)
-              ).toFixed(2);
-
-              let sum = 0;
-
-              new_price.forEach((num) => {
-                sum += num;
-              });
-
-              totalPriceCart.textContent = sum.toFixed(2);
-
-              save_CH.classList.add("d-none");
-            },
-            error: function (xhr, status, error) {
-              console.log(error);
-            },
-          });
+          qnt.dataset.first_qnt = parseInt(qnt.value);
         }
+
+        // Calculate the new price regardless of whether the quantity has changed
+        new_price.push(
+          parseFloat(prod_price.textContent) * parseInt(qnt.value)
+        );
+      }
+
+      // Send AJAX request only if there are updated quantities
+      if (Object.keys(updatedQuantities).length > 0) {
+        $.ajax({
+          type: "POST",
+          url: "/update_cart_guest/",
+          headers: {
+            "X-CSRFToken": csrftoken,
+          },
+          data: {
+            "updated_quantities": JSON.stringify(updatedQuantities), // Send updated quantities object as JSON string
+          },
+          success: function (data) {
+            if (data.message && isValid) {
+              alert(data.message);
+              isValid = false;
+            }
+
+            // Update UI elements based on the response
+            one_prod_sum.forEach((element, index) => {
+              element.textContent = new_price[index].toFixed(2);
+            });
+
+            let sum = 0;
+            new_price.forEach((num) => {
+              sum += num;
+            });
+            totalPriceCart.textContent = sum.toFixed(2);
+
+            save_CH.classList.add("d-none");
+          },
+          error: function (xhr, status, error) {
+            console.log(error);
+          },
+        });
       }
     });
   }
@@ -181,6 +183,13 @@ $(document).ready(function () {
     element.addEventListener("change", () => {
       const inputVal = Number(element.value);
       const prodId = element.dataset.prodid;
+
+      which_to_buy.forEach((btn, index) => {
+        if (btn.checked) {
+          btn.checked = false;
+          totalPriceCart.textContent = 0.0;
+        }
+      });
 
       if (inputVal < 1 && Number.isInteger(inputVal)) {
         alert("Please enter a valid number");
@@ -194,33 +203,61 @@ $(document).ready(function () {
 
   let new_price_which = 0;
 
-  let checkboxClicked = false;
+  let totalPrice232 = 0; // Initialize total price
+  let checkboxClicked = false; // Initialize flag to track checkbox click
 
-  which_to_buy.forEach((btn, index) => {
-    btn.addEventListener("click", () => {
+  which_to_buy.forEach((checkbox, index) => {
+    checkbox.addEventListener("change", () => {
+      let checkedCount = 0;
+      let checkedIndex = -1;
       const one_sum = one_prod_sum[index];
 
-      if (!checkboxClicked) {
-        // Nullify the total price text if checkbox is clicked for the first time
-        totalPriceCart.textContent = 0;
-        checkboxClicked = true; // Update the flag to indicate checkbox has been clicked
-      }
+      // Count the number of checked checkboxes and store the index of the checked checkbox
+      which_to_buy.forEach((cb, idx) => {
+        if (cb.checked) {
+          checkedCount++;
+          checkedIndex = idx;
+        }
+      });
 
-      if (btn.checked) {
-        new_price_which = (
-          parseFloat(totalPriceCart.textContent) +
-          parseFloat(one_sum.textContent)
-        ).toFixed(2);
-
-        totalPriceCart.textContent = new_price_which;
-      } else if (!btn.checked) {
-        totalPriceCart.textContent -= parseFloat(one_sum.textContent);
-        totalPriceCart.textContent = parseFloat(
-          totalPriceCart.textContent
-        ).toFixed(2);
-
-        if (parseFloat(totalPriceCart.textContent) < 0) {
+      if (checkedCount === 1) {
+        if (checkbox.checked) {
           totalPriceCart.textContent = 0;
+          new_price_which = (
+            parseFloat(totalPriceCart.textContent) +
+            parseFloat(one_sum.textContent)
+          ).toFixed(2);
+
+          totalPriceCart.textContent = new_price_which;
+        } else if (!checkbox.checked) {
+          totalPriceCart.textContent -= parseFloat(one_sum.textContent);
+          totalPriceCart.textContent = parseFloat(
+            totalPriceCart.textContent
+          ).toFixed(2);
+
+          if (parseFloat(totalPriceCart.textContent) < 0) {
+            totalPriceCart.textContent = 0;
+          }
+        }
+      } else {
+        const one_sum = one_prod_sum[index];
+
+        if (checkbox.checked) {
+          new_price_which = (
+            parseFloat(totalPriceCart.textContent) +
+            parseFloat(one_sum.textContent)
+          ).toFixed(2);
+
+          totalPriceCart.textContent = new_price_which;
+        } else if (!checkbox.checked) {
+          totalPriceCart.textContent -= parseFloat(one_sum.textContent);
+          totalPriceCart.textContent = parseFloat(
+            totalPriceCart.textContent
+          ).toFixed(2);
+
+          if (parseFloat(totalPriceCart.textContent) < 0) {
+            totalPriceCart.textContent = 0;
+          }
         }
       }
     });
@@ -279,61 +316,66 @@ $(document).ready(function () {
     $(document).on("click", ".save_changes", () => {
       let isValid = true;
       let new_price = [];
+      let updatedQuantities = {}; // Object to store updated quantities
 
       let productPrice2 = document.querySelectorAll(".product_price");
-      let quantity_inp2 = document.querySelectorAll(".onCartInput");
+      let quantity_inp2 = document.querySelectorAll("#product_stock");
       let tr_for_cart2 = document.querySelectorAll(".tr_for_cart");
 
       for (let index = 0; index < tr_for_cart2.length; index++) {
         const qnt = quantity_inp2[index];
         const prod_price = productPrice2[index];
 
-        let arr1 = [];
+        if (parseInt(qnt.value) !== parseInt(qnt.dataset.first_qnt)) {
+          // If the quantity has changed, add it to updatedQuantities object
+          updatedQuantities["sku"] = qnt.dataset.prodid;
+          updatedQuantities["quantity"] = parseInt(qnt.value);
 
-        if (qnt.value === qnt.dataset.first_qnt) {
-          new_price.push(
-            parseFloat(prod_price.textContent) * parseInt(qnt.value)
-          );
-        } else {
-          new_price.push(
-            parseFloat(prod_price.textContent) * parseInt(qnt.value)
-          );
-
-          $.ajax({
-            type: "POST",
-            url: "/updateCart/",
-            headers: {
-              "X-CSRFToken": csrftoken,
-            },
-            data: {
-              "qnt": parseInt(qnt.value),
-              "prodId": qnt.dataset.prodid,
-            },
-            success: function (data) {
-              if (data.success_message && isValid) {
-                alert(data.success_message);
-                isValid = false;
-              }
-
-              one_prod_sum[index].textContent = (
-                parseFloat(prod_price.textContent) * parseInt(qnt.value)
-              ).toFixed(2);
-
-              let sum = 0;
-
-              new_price.forEach((num) => {
-                sum += num;
-              });
-
-              totalPriceCart.textContent = sum.toFixed(2);
-
-              save_CH.classList.add("d-none");
-            },
-            error: function (xhr, status, error) {
-              console.log(xhr);
-            },
-          });
+          qnt.dataset.first_qnt = parseInt(qnt.value);
         }
+
+        // Calculate the new price regardless of whether the quantity has changed
+        new_price.push(
+          parseFloat(prod_price.textContent) * parseInt(qnt.value)
+        );
+      }
+
+      console.log(updatedQuantities);
+
+      // Send AJAX request only if there are updated quantities
+      if (Object.keys(updatedQuantities).length > 0) {
+        $.ajax({
+          type: "POST",
+          url: "/updateCart/",
+          headers: {
+            "X-CSRFToken": csrftoken,
+          },
+          data: {
+            "updated_quantities": JSON.stringify(updatedQuantities), // Send updated quantities object as JSON string
+          },
+          success: function (data) {
+            if (data.success_message && isValid) {
+              alert(data.success_message);
+              isValid = false;
+            }
+
+            // Update UI elements based on the response
+            one_prod_sum.forEach((element, index) => {
+              element.textContent = new_price[index].toFixed(2);
+            });
+
+            let sum = 0;
+            new_price.forEach((num) => {
+              sum += num;
+            });
+            totalPriceCart.textContent = sum.toFixed(2);
+
+            save_CH.classList.add("d-none");
+          },
+          error: function (xhr, status, error) {
+            console.log(error);
+          },
+        });
       }
     });
   }

@@ -1,16 +1,17 @@
 from django.shortcuts import render
 from users.models import Vendor, Consumer
-from inventory.models import Product, ProductInventory, ProductAttribute, ProductAttributeValue, Category, Sub_Category, ProductAttributeValues, Rating, Review, Wishlist, WishlistItem, Cart, CartItem
+from inventory.models import Product, ProductInventory, ProductAttribute, ProductAttributeValue, Category, Sub_Category, ProductAttributeValues, Rating, Review, Wishlist, WishlistItem, Cart, CartItem, Order, OrderItem, ShippingAddress
 from django.contrib.auth.decorators import login_required
 import jwt
 from django.conf import settings
 import json
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.db.models import Avg
 import bleach
 from django.db.models import F
 import os
 from datetime import datetime, timedelta
+import re
 
 
 '''
@@ -18,17 +19,13 @@ DONE search&filter
 DONE user registration&login, password change
 DONE product creation
 DONE product detail page and rating&reviews
+DONE wishlist
 DONE product delete&update
 DONE dashboard
-DONE  add to cart & remove from cart & update cart
+DONE add to cart & remove from cart & update cart
+DONE checkout
 
-
-daviwye mushaoba checkoutze sachiroa ubralod informaciis wamogeba anu checkoutiga meti araferi da nu iq kide aris 
-ragaceebi mara egeni nelnela iqneba iq stokis dakleba da ragaceebi
-
-anu xval momaq informacia da vanxorcieleb checkouts ajaxit
-
-xval ro movrche es taski ukve kargia
+eseigi viwyeb mushaobas dashboard peijze chveulebrivi iuzerebistvis
 '''
 
 """
@@ -179,7 +176,7 @@ def product_detail(request, sku):
 
     product32 = product[0].product
 
-    reviews = product32.reviews.all()
+    reviews = product32.reviews.all().order_by('-created_at')
     rating_instance, _ = Rating.objects.get_or_create(product=product32)
     average_rating = rating_instance.average_rating
     num_ratings = rating_instance.num_ratings
@@ -208,7 +205,7 @@ def dashboard(request, sku):
 
     context = {}
 
-    products = ProductInventory.objects.filter(product__vendor=vendor).annotate(avg_rating=F('product__rating__average_rating')).order_by('-avg_rating')
+    products = ProductInventory.objects.filter(product__vendor=vendor).annotate(avg_rating=F('product__ratings__average_rating')).order_by('-avg_rating')
 
         # Get distinct product names
     distinct_product_names = []
@@ -222,9 +219,12 @@ def dashboard(request, sku):
 
     lent = len(top_5_product)
 
-    for i in range(lent):
-        context[f'prod_{i+1}'] = top_5_product[i].product.rating.average_rating
-        context[f'rprod_{i+1}'] = top_5_product[i].product.category.name
+    try:
+        for i in range(lent):
+            context[f'prod_{i+1}'] = top_5_product[i].product.ratings.average_rating
+            context[f'rprod_{i+1}'] = top_5_product[i].product.category.name
+    except:
+        pass
 
     context['count_product'] = len(products)
     context['products'] = products
@@ -281,37 +281,38 @@ def cart(request):
     else:
         cart_items = request.COOKIES.get('cart_items')
 
-    if cart_items:
-        cart_items = eval(cart_items)  # Convert the string back to a list
-
         total_price = 0
         cart_data = []
         attr_values = []
 
-        for cart_item in cart_items:
-            product = ProductInventory.objects.get(sku=cart_item['sku'])
-            price = product.retail_price * cart_item['quantity']
-            total_price += price
+        if cart_items:
+            cart_items = eval(cart_items)  # Convert the string back to a list
 
-            attribute_values = product.productAttributes.all()
-            if attribute_values.exists():
-                attr_values.append(attribute_values.first().value)
-            
-            cart_data.append({
-                'name': product.product.name,
-                'img_url': product.img_url.url,
-                'quantity': cart_item['quantity'],
-                'fullPrice': price,
-                'price': product.retail_price,
-                'sku': product.sku,
-                "stock": product.stock,
-                'attr_values': attr_values
-            })
+            for cart_item in cart_items:
+                product = ProductInventory.objects.get(sku=cart_item['sku'])
+                price = product.retail_price * int(cart_item['quantity'])
+                total_price += price
+
+                attribute_values = product.productAttributes.all()
+                if attribute_values.exists():
+                    attr_values.append(attribute_values.first().value)
+                
+                cart_data.append({
+                    'name': product.product.name,
+                    'img_url': product.img_url.url,
+                    'quantity': int(cart_item['quantity']),
+                    'fullPrice': price,
+                    'price': product.retail_price,
+                    'sku': product.sku,
+                    "stock": product.stock,
+                    'attr_values': attr_values
+                })
 
         page = 'cart' if request.path == '/cart/' else 'other'
+        
         context = {"cart_data": cart_data, "total_price": total_price, 'page': page}
 
-    return render(request, 'mainApp/cart.html', context=context)
+        return render(request, 'mainApp/cart.html', context=context)
 
 def checkout_page(request):
     # Get the product information from the URL parameters
@@ -345,7 +346,8 @@ def checkout_page(request):
                 'name': j.product.name,
                 'img_url': j.img_url.url,
                 'price': j.retail_price,
-                'quantity': i['quantity']
+                'quantity': i['quantity'],
+                'sku': j.sku
             }
             
             products2.append(product_info2)
@@ -420,9 +422,9 @@ def filter_products_for_collections(request):
         filters_attr_dict = None
 
     if search_q:
-        products = ProductInventory.objects.filter(product__name__icontains=search_q).order_by('retail_price').distinct()
+        products = ProductInventory.objects.filter(product__name__icontains=search_q, stock__gt=0).order_by('retail_price').distinct()
     else:
-        products = ProductInventory.objects.all().order_by('retail_price').distinct()
+        products = ProductInventory.objects.filter(stock__gt=0).order_by('retail_price').distinct()
 
     if filters_cat_dict: 
         products = products.filter(product__category__name__in=filters_cat_dict)
@@ -447,6 +449,18 @@ def filter_products_for_collections(request):
 
 
     return JsonResponse({'products': serialized_products})
+
+# these views are for comments and reviews
+def delete_review(request):
+    review_id = request.POST.get('reviewId')
+    # Save the review
+    review = Review.objects.get(pk=int(review_id))
+    review.delete()
+
+    return JsonResponse({
+        "message": "Review deleted successfully!",
+        "status": "success"
+    })
 
 def submit_review(request):
     if request.method == 'POST':
@@ -1092,8 +1106,22 @@ def add_to_wishlist(request):
 
         # Add the product to the wishlist
         wishlist_item = WishlistItem.objects.create(wishlist=wishlist, product=product)
+
+        product_name = product.product.name
+        img = product.img_url
+        product_price = product.retail_price
+        product_pk = product.pk
+        product_unique_id = product.product.unique_id
         
-        return JsonResponse({'success': True, 'message': 'Product added to wishlist'})
+        return JsonResponse({
+            'success': True,
+            'message': 'Product added to wishlist',              
+            'product_name': product_name,
+            'image': img.url,
+            'price': product_price,
+            'product_id': product_pk,
+            'product_unique_id': product_unique_id
+        })
     
     return JsonResponse({'success': False, 'message': 'User not authenticated or method not allowed'})
 
@@ -1116,46 +1144,45 @@ def add_to_cart(request):
         quantity = int(request.POST.get('quantity'))
         sku = request.POST.get('sku')
 
-        l1 = list()
-
-        l1.append(quantity)
-
         # Initialize an empty list to store cart items
         cart_items = request.COOKIES.get('cart_items')
         if cart_items:
-            cart_items = eval(cart_items)  # Convert the string back to a list
+            cart_items = json.loads(cart_items)  # Convert the JSON string back to a list
         else:
             cart_items = []
 
         # Check if the product is already in the cart
-        product_index = None
-        for index, item in enumerate(cart_items):
+        for item in cart_items:
             if item['sku'] == sku:
-                product_index = index
-                break
-            
+                response = JsonResponse({'message_already': 'already in cart'})
+                return response
+
+        # Get product details
+        product = ProductInventory.objects.get(sku=sku)
+        price = product.retail_price * quantity
+        total_price = price
+
+        # Add the new item to the cart
+        cart_items.append({'sku': sku, 'quantity': quantity})
+
         # Set the expiration time to 1 day from now
-        expiration_time = datetime.now() + timedelta(days=1) 
+        expiration_time = datetime.now() + timedelta(days=1)
 
-        total_price = 0   
+        # Prepare JSON response
+        response_data = {
+            "price": product.retail_price,
+            "sku": product.sku,
+            'quantity': quantity,
+            "name": product.product.name,
+            "img_url": str(product.img_url.url),
+            'total_price': total_price,
+            'unique_id': product.product.unique_id
+        }
 
-        # If the product is in the cart, update the quantity
-        if product_index is not None:
-            response = JsonResponse({'message_already': 'already in cart'})
-            return response
-        else:
-            # Add a new item to the cart
-            cart_items.append({'sku': sku, 'quantity': quantity})
-        
-            product = ProductInventory.objects.get(sku=sku)
-
-            price = product.retail_price * quantity
-            total_price += price
-
-            # Set the updated cart data in cookies
-            response = JsonResponse({"price": product.retail_price, "sku": product.sku, 'quantity': quantity, "name": product.product.name, "img_url": str(product.img_url.url), 'total_price': total_price, 'unique_id': product.product.unique_id})
-            response.set_cookie('cart_items', cart_items, expires=expiration_time)
-            return response
+        # Set the updated cart data in cookies
+        response = JsonResponse(response_data)
+        response.set_cookie('cart_items', json.dumps(cart_items), expires=expiration_time)
+        return response
     else:
         return JsonResponse({'error': 'Invalid request method'}, status=400)
 
@@ -1278,10 +1305,10 @@ def get_cart_data(request):
 
             for cart_item in cart_items:
                 product = ProductInventory.objects.get(sku=cart_item['sku'])
-                price = product.retail_price * cart_item['quantity']
+                price = product.retail_price * int(cart_item['quantity'])
                 total_price += price
                 
-                cart_products.append({"prod_price": product.retail_price, "sku": product.sku, 'quantity': cart_item['quantity'], "name": product.product.name, "img_url": str(product.img_url.url), 'unique_id': product.product.unique_id})
+                cart_products.append({"prod_price": product.retail_price, "sku": product.sku, 'quantity': int(cart_item['quantity']), "name": product.product.name, "img_url": str(product.img_url.url), 'unique_id': product.product.unique_id})
 
             return JsonResponse({'total_price': total_price, 'cart_products': cart_products})
         else:
@@ -1306,12 +1333,11 @@ def remove_product_from_cart(request):
 
 def updateCart(request):
     if request.method == 'POST':
-        qnt = request.POST.get('qnt')
-        prodId = request.POST.get('prodId')  # Assuming the SKU is sent along with the action
+        updated_quantities = json.loads(request.POST.get('updated_quantities'))
 
         try:
-            cart_item = CartItem.objects.get(cart__user=request.user, product__sku=prodId)
-            cart_item.quantity = int(qnt)
+            cart_item = CartItem.objects.get(cart__user=request.user, product__sku=updated_quantities['sku'])
+            cart_item.quantity = int(updated_quantities['quantity'])
             cart_item.save()
             return JsonResponse({'success': True, 'success_message': "Cart Item Update!!"})
         except:
@@ -1319,21 +1345,166 @@ def updateCart(request):
 
 def update_cart_guest(request):
     if request.method == 'POST':
-        cart_items = request.COOKIES.get('cart_items')
-        quantity = request.POST.get('qnt')
-        sku = request.POST.get('prodId')
+        # Get the cart items from the cookies
+        cart_items_json = request.COOKIES.get('cart_items')
+        
+        if cart_items_json:
+            # Parse the JSON string to retrieve the cart items list
+            cart_items = json.loads(cart_items_json)
+        else:
+            # If cart_items is not present, return an empty cart message
+            return JsonResponse({'success': False, 'message': 'Cart is empty'})
+        
+        # Get the updated quantities and SKUs from the POST request
+        updated_quantities = json.loads(request.POST.get('updated_quantities'))
+        
+        # Update the quantities of the specified products in the cart
+        for item in cart_items:
+            sku = item['sku']
+            if sku in updated_quantities:
+                item['quantity'] = updated_quantities[sku]
+        
+        # Convert the updated cart items list back to JSON string
+        updated_cart_json = json.dumps(cart_items)
+        
+        # Set the updated cart items in the cookies
+        response = JsonResponse({'success': True, 'message': 'Cart Item Update!!'})
+        response.set_cookie('cart_items', updated_cart_json)
+        return response
+    else:
+        # If the request method is not POST, return an error message
+        return JsonResponse({'success': False, 'message': 'Invalid request method'})
 
-        if cart_items:
-            cart_items = eval(cart_items)
-            # Find the item in the cart_items list
-            for cart_item in cart_items:
-                if cart_item['sku'] == sku:
-                    cart_item['quantity'] = int(quantity)
+def processOrder(request):
+    transaction_id = datetime.now().timestamp()
+    cart_items = request.COOKIES.get('cart_items')
 
-            response = JsonResponse({'success': True, 'message': "Cart Item Update!!"})
-            response.set_cookie('cart_items', cart_items)
+    if request.method == 'POST':
+        email = request.POST.get('email')
+        name = request.POST.get('full_name')
+        number = request.POST.get('number')
+        city = request.POST.get('city')
+        postalCode = request.POST.get('postalCode')
+        address = request.POST.get('address')
+        product_sku = request.POST.get('sku')
+            
+        # Assuming 'document.cookie' is represented as a string
+        document_cookie = request.COOKIES.get('cart_items', '')
+
+        costumer, created = Consumer.objects.get_or_create(email=email)
+
+        costumer.full_name = name
+        costumer.save()
+            
+        order = Order.objects.create(
+            costumer=costumer,
+            complete=False,
+        )
+
+        updated_items = []
+
+        if document_cookie:
+            total_price = 0
+
+            cookieCart = json.loads(document_cookie)
+
+            for rame in range(len(cookieCart)):
+
+                if cookieCart[rame]['sku'] != json.loads(product_sku)[rame]:
+                    # Append this item to the updated_items list
+                    updated_items.append({'sku': cookieCart[rame]['sku'], 'quantity': cookieCart[rame]['quantity']})
+                else:
+                    product = ProductInventory.objects.get(sku=cookieCart[rame]['sku'])
+
+                    orderItem = OrderItem.objects.create(
+                        order=order,
+                        product=product,
+                        quantity=int(cookieCart[rame]['quantity']),
+                    )
+
+                    price = product.retail_price * int(cookieCart[rame]['quantity'])
+                    total_price += price
+
+                    stock_item = int(product.stock)
+                    stock_item -= int(cookieCart[rame]['quantity'])
+                    product.stock = stock_item
+                    product.save()
+
+            total321 = total_price + 5
+            total4321 = float(order.get_all_total) + 5
+
+            order.transaction_id = transaction_id
+
+            if float(total321) == total4321:
+                order.complete = True
+            order.save()
+            
+            ShippingAddress.objects.get_or_create(
+                costumer=costumer,
+                order=order,
+                address=address,
+                city=city,
+                Postal_code=postalCode,
+                full_name=name,
+                phone_number=number,
+                email=email
+            )
+
+            response = JsonResponse({'success': True, 'message': "Thanks For Buying!!"})
+
+            # Update the cart_items cookie with the modified array
+            if updated_items != []:
+                response.set_cookie('cart_items', json.dumps(updated_items), expires=168 * 3600)
+            else:
+                response.delete_cookie('cart_items')
+
             return response
         else:
-            return JsonResponse({'success': False, 'message': 'Cart is empty'})
+            total_price = 0
 
-    return JsonResponse({'success': False, 'message': 'Invalid request method'})
+            user_cart = Cart.objects.get(user=request.user)
+
+            user_cartItem = user_cart.items.filter(product__sku__in=json.loads(product_sku))
+
+            for item in user_cartItem:
+                product = ProductInventory.objects.get(sku=item.product.sku)
+
+                item.delete()
+
+                orderItem = OrderItem.objects.create(
+                    order=order,
+                    product=product,
+                    quantity=int(item.quantity),
+                )
+
+                price = product.retail_price * int(item.quantity)
+                total_price += price
+
+                stock_item = int(product.stock)
+                stock_item -= int(item.quantity)
+                product.stock = stock_item
+                product.save()
+            
+            total321 = total_price + 5
+            total4321 = float(order.get_all_total) + 5
+
+            order.transaction_id = transaction_id
+
+            if float(total321) == total4321:
+                order.complete = True
+            order.save()
+            
+            ShippingAddress.objects.get_or_create(
+                costumer=request.user,
+                order=order,
+                address=address,
+                city=city,
+                Postal_code=postalCode,
+                full_name=name,
+                phone_number=number,
+                email=email
+            )
+
+            response = JsonResponse({'success': True, 'message': "Thanks For Buying!!"})
+
+            return response

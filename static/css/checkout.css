@@ -41,6 +41,10 @@ h6 {
   font-weight: 500;
 }
 
+.modal_forCheckout.show {
+  display: block;
+}
+
 .form-control {
   margin: 20px 0;
   position: relative;

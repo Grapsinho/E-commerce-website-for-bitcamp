@@ -17,6 +17,7 @@ urlpatterns = [
     path('update_cart_guest/', update_cart_guest, name='update_cart_guest'),
 
     path('cart/checkout_page/', checkout_page, name='checkout_page'),
+    path('processOrder/', processOrder, name='processOrder'),
     
     path('deleteProduct/', deleteProduct, name='deleteProduct'),
     path('delete_to_wishlist/', delete_to_wishlist, name='delete_to_wishlist'),
@@ -27,4 +28,5 @@ urlpatterns = [
     path("filter_products_for_collections/", filter_products_for_collections, name="filter_products_for_collections"),
     path("filter_sub_products_forproduct_detail/", filter_sub_products_forproduct_detail, name="filter_sub_products_forproduct_detail"),
     path("submit_review/", submit_review, name="submit_review"),
+    path("delete_review/", delete_review, name="delete_review"),
 ]

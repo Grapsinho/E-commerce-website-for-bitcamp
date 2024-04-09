@@ -27,6 +27,7 @@ class UserManager(BaseUserManager):
 class Consumer(AbstractUser):
     email = models.EmailField(null=True, unique=True)
     is_vendor = models.BooleanField(default=False)
+    full_name = models.CharField(max_length=255, default='None')
 
     # ანუ იუზერნეიმ ფიელდ იქნება ემაილი ეხლა
     USERNAME_FIELD = "email"

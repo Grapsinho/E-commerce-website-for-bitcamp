@@ -308,52 +308,26 @@ $(document).ready(function () {
         $(".add-to-cart")
           .off("click")
           .on("click", function () {
-            // these if else statement is for check if quantity is correct or not
-            jwtToken = localStorage.getItem("access_token");
+            if (products.stock == 0 || products.stock < 0) {
+              alert("This product has been sold out.");
+            } else {
+              // these if else statement is for check if quantity is correct or not
+              jwtToken = localStorage.getItem("access_token");
 
-            // check if quantity is more than stock
-            if (
-              parseInt($('input[name="quantity"]').val()) >
-              parseInt(products.stock)
-            ) {
-              $(".add-to-cart").text("Not Enough Unit");
+              // check if quantity is more than stock
+              if (
+                parseInt($('input[name="quantity"]').val()) >
+                parseInt(products.stock)
+              ) {
+                $(".add-to-cart").text("Not Enough Unit");
 
-              $(".add-to-cart").css({
-                "pointer-events": "none",
-              });
+                $(".add-to-cart").css({
+                  "pointer-events": "none",
+                });
 
-              // check again
+                // check again
 
-              $('input[name="quantity"]').on("input", function () {
-                if (
-                  parseInt($('input[name="quantity"]').val()) >
-                  parseInt(products.stock)
-                ) {
-                  $(".add-to-cart").text("Not Enough Unit");
-
-                  $(".add-to-cart").css({
-                    "pointer-events": "none",
-                  });
-                } else {
-                  $(".add-to-cart").text("Add To Cart");
-
-                  $(".add-to-cart").css({
-                    "pointer-events": "all",
-                  });
-                }
-              });
-
-              // check again
-              $(".minus")
-                .off("click")
-                .on("click", function () {
-                  let value = parseInt($('input[name="quantity"]').val());
-
-                  if (value > 1) {
-                    // Ensure the value is decremented by 1
-                    $('input[name="quantity"]').val(value - 1);
-                  }
-
+                $('input[name="quantity"]').on("input", function () {
                   if (
                     parseInt($('input[name="quantity"]').val()) >
                     parseInt(products.stock)
@@ -371,39 +345,43 @@ $(document).ready(function () {
                     });
                   }
                 });
-            } else if (parseInt($('input[name="quantity"]').val()) <= 0) {
-              $(".add-to-cart").text("Not Enough Unit");
 
-              $(".add-to-cart").css({
-                "pointer-events": "none",
-              });
+                // check again
+                $(".minus")
+                  .off("click")
+                  .on("click", function () {
+                    let value = parseInt($('input[name="quantity"]').val());
 
-              $('input[name="quantity"]').on("input", function () {
-                if (parseInt($('input[name="quantity"]').val()) <= 0) {
-                  $(".add-to-cart").text("Not Enough Unit");
+                    if (value > 1) {
+                      // Ensure the value is decremented by 1
+                      $('input[name="quantity"]').val(value - 1);
+                    }
 
-                  $(".add-to-cart").css({
-                    "pointer-events": "none",
+                    if (
+                      parseInt($('input[name="quantity"]').val()) >
+                      parseInt(products.stock)
+                    ) {
+                      $(".add-to-cart").text("Not Enough Unit");
+
+                      $(".add-to-cart").css({
+                        "pointer-events": "none",
+                      });
+                    } else {
+                      $(".add-to-cart").text("Add To Cart");
+
+                      $(".add-to-cart").css({
+                        "pointer-events": "all",
+                      });
+                    }
                   });
-                } else {
-                  $(".add-to-cart").text("Add To Cart");
+              } else if (parseInt($('input[name="quantity"]').val()) <= 0) {
+                $(".add-to-cart").text("Not Enough Unit");
 
-                  $(".add-to-cart").css({
-                    "pointer-events": "all",
-                  });
-                }
-              });
+                $(".add-to-cart").css({
+                  "pointer-events": "none",
+                });
 
-              $(".plus")
-                .off("click")
-                .on("click", function () {
-                  let value = parseInt($('input[name="quantity"]').val());
-
-                  if (value <= parseInt(products.stock) - 1) {
-                    // Ensure the value is incremented by 1
-                    $('input[name="quantity"]').val(value + 1);
-                  }
-
+                $('input[name="quantity"]').on("input", function () {
                   if (parseInt($('input[name="quantity"]').val()) <= 0) {
                     $(".add-to-cart").text("Not Enough Unit");
 
@@ -418,44 +396,70 @@ $(document).ready(function () {
                     });
                   }
                 });
-            } else {
-              if (!document.getElementById("wishproducts")) {
-                $.ajax({
-                  type: "POST",
-                  url: "/add_to_cart/",
-                  headers: {
-                    "X-CSRFToken": csrftoken,
-                  },
-                  data: {
-                    "sku": products.sku,
-                    "quantity": $('input[name="quantity"]').val(),
-                  },
-                  success: handleSuccessForNotRegistered,
-                  error: function (xhr, status, error) {
-                    console.log(error);
-                    alert(xhr.responseJSON.error);
-                  },
-                });
+
+                $(".plus")
+                  .off("click")
+                  .on("click", function () {
+                    let value = parseInt($('input[name="quantity"]').val());
+
+                    if (value <= parseInt(products.stock) - 1) {
+                      // Ensure the value is incremented by 1
+                      $('input[name="quantity"]').val(value + 1);
+                    }
+
+                    if (parseInt($('input[name="quantity"]').val()) <= 0) {
+                      $(".add-to-cart").text("Not Enough Unit");
+
+                      $(".add-to-cart").css({
+                        "pointer-events": "none",
+                      });
+                    } else {
+                      $(".add-to-cart").text("Add To Cart");
+
+                      $(".add-to-cart").css({
+                        "pointer-events": "all",
+                      });
+                    }
+                  });
               } else {
-                $.ajax({
-                  type: "POST",
-                  url: "/add_to_cart_users/",
-                  headers: {
-                    "X-CSRFToken": csrftoken,
-                    "Authorization": `Bearer ${jwtToken}`,
-                  },
-                  data: {
-                    "sku": products.sku,
-                    "quantity": $('input[name="quantity"]').val(),
-                  },
-                  success: handleSuccess,
-                  error: function (xhr, status, error) {
-                    handleError({
-                      product: products.sku,
-                      jwt_error: xhr.responseText,
-                    });
-                  },
-                });
+                if (!document.getElementById("wishproducts")) {
+                  $.ajax({
+                    type: "POST",
+                    url: "/add_to_cart/",
+                    headers: {
+                      "X-CSRFToken": csrftoken,
+                    },
+                    data: {
+                      "sku": products.sku,
+                      "quantity": $('input[name="quantity"]').val(),
+                    },
+                    success: handleSuccessForNotRegistered,
+                    error: function (xhr, status, error) {
+                      console.log(error);
+                      alert(xhr.responseJSON.error);
+                    },
+                  });
+                } else {
+                  $.ajax({
+                    type: "POST",
+                    url: "/add_to_cart_users/",
+                    headers: {
+                      "X-CSRFToken": csrftoken,
+                      "Authorization": `Bearer ${jwtToken}`,
+                    },
+                    data: {
+                      "sku": products.sku,
+                      "quantity": $('input[name="quantity"]').val(),
+                    },
+                    success: handleSuccess,
+                    error: function (xhr, status, error) {
+                      handleError({
+                        product: products.sku,
+                        jwt_error: xhr.responseText,
+                      });
+                    },
+                  });
+                }
               }
             }
           });
@@ -558,13 +562,13 @@ $(document).ready(function () {
         success: function (response) {
           // Update reviews list with new review
           $("#reviews-list").prepend(
-            "<li><p>User: " +
-              response.user +
-              "</p><p>Rating: " +
-              response.rating +
-              "</p><p>Comment: " +
-              response.comment +
-              "</p></li>"
+            `<li class='review-item'><p class='user-info'>
+            User: <span class="user-name">${response.user}</span>
+          </p><p class='rating'> Rating:
+              ${response.rating}
+              </p><p class='comment'> Comment:
+              ${response.comment}
+              </p></li>`
           );
           // Update average rating and number of ratings
 
@@ -572,15 +576,6 @@ $(document).ready(function () {
             "Average Rating: " + response.average_rating.toFixed(1)
           );
           $("#num-ratings").text("Number of Ratings: " + response.num_ratings);
-          // Update star rating display based on the new average rating
-          $(".rating-stars").empty();
-          for (var i = 1; i <= 5; i++) {
-            if (i <= response.average_rating) {
-              $(".rating-stars").append('<i class="fas fa-star star"></i>');
-            } else {
-              $(".rating-stars").append('<i class="far fa-star star"></i>');
-            }
-          }
         },
         error: function (xhr, errmsg, err) {
           if (xhr.responseText == '{"error25": "Token has expired"}') {
@@ -614,14 +609,14 @@ $(document).ready(function () {
                   },
                   success: function (response) {
                     // Update reviews list with new review
-                    $("#reviews-list").append(
-                      "<li><p>User: " +
-                        response.user +
-                        "</p><p>Rating: " +
-                        response.rating +
-                        "</p><p>Comment: " +
-                        response.comment +
-                        "</p></li>"
+                    $("#reviews-list").prepend(
+                      `<li class='review-item'><p class='user-info'>
+                      User: <span class="user-name">${response.user}</span>
+                    </p><p class='rating'> Rating:
+                        ${response.rating}
+                        </p><p class='comment'> Comment:
+                        ${response.comment}
+                        </p></li>`
                     );
                     // Update average rating and number of ratings
                     $("#average-rating").text(
@@ -630,19 +625,6 @@ $(document).ready(function () {
                     $("#num-ratings").text(
                       "Number of Ratings: " + response.num_ratings
                     );
-                    // Update star rating display based on the new average rating
-                    $(".rating-stars").empty();
-                    for (var i = 1; i <= 5; i++) {
-                      if (i <= response.average_rating) {
-                        $(".rating-stars").append(
-                          '<i class="fas fa-star star"></i>'
-                        );
-                      } else {
-                        $(".rating-stars").append(
-                          '<i class="far fa-star star"></i>'
-                        );
-                      }
-                    }
                   },
                   error: function (xhr, errmsg, err) {
                     alert(xhr.responseJSON.error);
@@ -659,5 +641,44 @@ $(document).ready(function () {
     } else {
       alert("Please Rate Product And Leave Comment");
     }
+  });
+
+  const del_comm_btn = document.querySelectorAll(".delete_comment");
+
+  del_comm_btn.forEach((element) => {
+    element.addEventListener("click", () => {
+      $.ajax({
+        type: "POST",
+        url: "/delete_review/",
+        headers: {
+          "X-CSRFToken": csrftoken,
+        },
+        data: {
+          "reviewId": element.dataset.commpk,
+        },
+        success: function (response) {
+          if (response.status == "success") {
+            // Show the alert
+            $(".comment_deleted_popUp").removeClass("hide");
+            $(".comment_deleted_popUp").addClass("show");
+
+            // Set a timeout to hide the alert after 2 seconds
+            setTimeout(() => {
+              $(".comment_deleted_popUp").removeClass("show");
+              $(".comment_deleted_popUp").addClass("hide");
+            }, 2000);
+          }
+
+          $(element.parentElement).fadeOut(500, function () {
+            // After the animation completes, remove the comment from the DOM
+            element.parentElement.remove();
+          });
+        },
+        error: function (xhr, errmsg, err) {
+          console.log(`Error!`);
+          console.log(err);
+        },
+      });
+    });
   });
 });
