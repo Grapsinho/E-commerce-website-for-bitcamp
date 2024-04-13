@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'users.apps.UsersConfig',
     'inventory.apps.InventoryConfig',
     'mainApp.apps.MainappConfig',
+    'dashboard.apps.DashboardConfig',
 
     #api
     'rest_framework',

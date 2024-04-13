@@ -52,3 +52,9 @@ class UserSerializer(serializers.ModelSerializer):
         user.set_password(password)  # Set the user's password using set_password for encryption
         user.save()  # Save the user instance with the updated password
         return user  # Return the created user instance
+
+class VendorUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Vendor
+        fields = ['shop_name', 'description', 'address']  # Update only allowed fields
+        read_only_fields = ['email',]  # Prevent email modification through the API

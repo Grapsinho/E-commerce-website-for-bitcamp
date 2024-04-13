@@ -10,6 +10,9 @@ urlpatterns = [
     # main urls
     path('', include('mainApp.urls')),
 
+    # dashboard urls
+    path('', include('dashboard.urls')),
+
     # auth urls
     path('auth/', include('users.urls')),
 

@@ -5,7 +5,6 @@ urlpatterns = [
     path("", home, name="home"),
     path("add_products/", add_products, name="add_products"),
     path("product_detail/<str:sku>/", product_detail, name="product_detail"),
-    path("dashboard/<str:sku>/", dashboard, name="dashboard"),
     path("update_product/<str:sku>/", update_product, name="update_product"),
 
     path('cart/', cart, name='cart'),

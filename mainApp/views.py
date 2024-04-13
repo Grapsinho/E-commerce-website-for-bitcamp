@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from users.models import Vendor, Consumer
-from inventory.models import Product, ProductInventory, ProductAttribute, ProductAttributeValue, Category, Sub_Category, ProductAttributeValues, Rating, Review, Wishlist, WishlistItem, Cart, CartItem, Order, OrderItem, ShippingAddress
+from inventory.models import Product, ProductInventory, ProductAttribute, ProductAttributeValue, Category, Sub_Category, ProductAttributeValues, Rating, Review, Wishlist, WishlistItem, Cart, CartItem, Order, OrderItem, ShippingAddress, SalesRecord
 from django.contrib.auth.decorators import login_required
 import jwt
 from django.conf import settings
@@ -13,6 +13,8 @@ import os
 from datetime import datetime, timedelta
 import re
 
+from .getReco import get_recommendations
+
 
 '''
 DONE search&filter
@@ -21,11 +23,13 @@ DONE product creation
 DONE product detail page and rating&reviews
 DONE wishlist
 DONE product delete&update
-DONE dashboard
+DONE dashboard for consumers and for vendors
 DONE add to cart & remove from cart & update cart
 DONE checkout
+DONE recommendations
 
-eseigi viwyeb mushaobas dashboard peijze chveulebrivi iuzerebistvis
+eseigi kargi iqneba ro stilebze daivwyo mushaoba ubralod arvici raunda vqna
+
 '''
 
 """
@@ -50,6 +54,8 @@ def home(request):
             vendor = request.user
     except:
         vendor = request.user
+
+    recommendations = get_recommendations(vendor)
 
     if request.method == 'GET':
         # Retrieve all ProductInventory instances
@@ -102,7 +108,7 @@ def home(request):
                     # If it doesn't exist, create a new list with the value
                     attr_dict[attribute_value.attributevalues.attribute.name] = [attribute_value.attributevalues.value]
 
-    context = {'vendor': vendor, 'attrs': attr_dict.items(), 'product_inventories':product_inventories, 'categories': categories, 'q': q, 'len_wish': len_wish, "wishprods": wishlist_items, 'cart_data': cart_data, 'len_cart': len(cart_data), 'total_price': sum(total_price)}
+    context = {'vendor': vendor, 'attrs': attr_dict.items(), 'product_inventories':product_inventories, 'categories': categories, 'q': q, 'len_wish': len_wish, "wishprods": wishlist_items, 'cart_data': cart_data, 'len_cart': len(cart_data), 'total_price': sum(total_price), 'recommendations': recommendations}
 
     return render(request, 'mainApp/home.html', context)
 
@@ -200,38 +206,6 @@ def product_detail(request, sku):
     }
     return render(request, 'mainApp/product_detail.html', context)
 
-def dashboard(request, sku):
-    vendor = Vendor.objects.get(email=sku)
-
-    context = {}
-
-    products = ProductInventory.objects.filter(product__vendor=vendor).annotate(avg_rating=F('product__ratings__average_rating')).order_by('-avg_rating')
-
-        # Get distinct product names
-    distinct_product_names = []
-    top_5_product = []
-    for product in products:
-        if product.product.name not in distinct_product_names:
-            distinct_product_names.append(product.product.name)
-            top_5_product.append(product)
-            if len(top_5_product) == 6:
-                break
-
-    lent = len(top_5_product)
-
-    try:
-        for i in range(lent):
-            context[f'prod_{i+1}'] = top_5_product[i].product.ratings.average_rating
-            context[f'rprod_{i+1}'] = top_5_product[i].product.category.name
-    except:
-        pass
-
-    context['count_product'] = len(products)
-    context['products'] = products
-    context['top_5_product'] = top_5_product
-    
-    return render(request, 'mainApp/dashboard.html', context)
-
 def cart(request):
     cart_items = None
 
@@ -270,6 +244,7 @@ def cart(request):
             len_wish = 0
 
         page = 'cart' if request.path == '/cart/' else 'other'
+
         
         context = {
             "vendor": vendor,
@@ -1430,6 +1405,13 @@ def processOrder(request):
                     product.stock = stock_item
                     product.save()
 
+                    # Create a SalesRecord for the sold product
+                    salesrcrd = SalesRecord.objects.create(
+                        vendor=product.product.vendor,
+                        product=product,
+                        quantity_sold=int(cookieCart[rame]['quantity'])
+                    )
+
             total321 = total_price + 5
             total4321 = float(order.get_all_total) + 5
 
@@ -1484,6 +1466,13 @@ def processOrder(request):
                 stock_item -= int(item.quantity)
                 product.stock = stock_item
                 product.save()
+
+                # Create a SalesRecord for the sold product
+                salesrcrd = SalesRecord.objects.create(
+                    vendor=product.product.vendor,
+                    product=product,
+                    quantity_sold=int(item.quantity),
+                )
             
             total321 = total_price + 5
             total4321 = float(order.get_all_total) + 5

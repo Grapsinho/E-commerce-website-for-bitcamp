@@ -11,6 +11,7 @@ urlpatterns = [
     # views that handles registration and authorization
     path("signup/", SignUpView.as_view(), name="signup"),
     path("signup_vendors/", SignUpView_vendor.as_view(), name="signup_vendors"),
+    path("<str:email>/update_vendor/", VendorUpdateView.as_view(), name="update_vendors"),
     path("signin/", LoginView.as_view(), name="signin"),
 
     # just template views

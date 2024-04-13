@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Update Form</title>
+    <link rel="stylesheet" href="{% static 'css/login1.css' %}" />
+  </head>
+  <body>
+    <div class="container">
+      <div class="registration form">
+        <header
+          style="
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+          "
+        >
+          <a href="{% url 'home' %}">Go Home</a>
+          <span> Update </span>
+        </header>
+        <form method="post">
+          {% csrf_token %}
+
+          <input
+            type="hidden"
+            name="email"
+            id="vend_email"
+            value="{{vend.email}}"
+          />
+
+          <input
+            type="text"
+            id="shop-name"
+            placeholder="Shop Name"
+            style="margin-bottom: 0.7rem"
+            value="{{vend.shop_name}}"
+          /><br />
+          <textarea
+            id="description"
+            placeholder="Description"
+            style="
+              width: 100%;
+              padding: 15px 15px 0 15px;
+              font-size: 15px;
+              margin-bottom: 0.3rem;
+              border: 1px solid #ddd;
+              border-radius: 6px;
+              outline: none;
+            "
+          >
+{{vend.description}}</textarea
+          ><br />
+          <input
+            type="text"
+            id="address"
+            placeholder="Address"
+            value="{{vend.address}}"
+          /><br />
+          <input type="button" class="button" value="Update" />
+        </form>
+      </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+      let shop_name = document.querySelector("#shop-name");
+      let description = document.querySelector("#description");
+      let address = document.querySelector("#address");
+
+      function sanitizeInput(userInput) {
+        // Remove all HTML tags from user input
+        let sanitizedInput = userInput.replace(/(<([^>]+)>)/gi, "");
+        return sanitizedInput;
+      }
+
+      let jwtToken = localStorage.getItem("access_token");
+
+      function getCookie(name) {
+        var cookieValue = null;
+        if (document.cookie && document.cookie !== "") {
+          var cookies = document.cookie.split(";");
+          for (var i = 0; i < cookies.length; i++) {
+            var cookie = jQuery.trim(cookies[i]);
+            // Check if this cookie string begins with the name provided
+            if (cookie.substring(0, name.length + 1) === name + "=") {
+              cookieValue = decodeURIComponent(
+                cookie.substring(name.length + 1)
+              );
+              break;
+            }
+          }
+        }
+        return cookieValue;
+      }
+      var csrftoken = getCookie("csrftoken");
+
+      $(".button").on("click", function () {
+        const descriptionVal = description.value;
+        const shop_nameVal = shop_name.value;
+        const addressVal = address.value;
+        const vend_email = document.querySelector("#vend_email").value;
+
+        if (!shop_nameVal) {
+          alert(
+            "Please fill shop name field!\n\n*Note: Shop Name Should Not Have Special Characters."
+          );
+          return false;
+        }
+
+        var formData = {
+          "shop_name": sanitizeInput(shop_nameVal).replace(/['"]/g, ""),
+          "description": sanitizeInput(descriptionVal),
+          "address": sanitizeInput(addressVal),
+        };
+
+        $.ajax({
+          url: `${location.protocol}//${location.host}/auth/${sanitizeInput(
+            vend_email
+          )}/update_vendor/`,
+          type: "PUT",
+          headers: {
+            "X-CSRFToken": csrftoken,
+            "Authorization": `Bearer ${jwtToken}`,
+          },
+          contentType: "application/json",
+          data: JSON.stringify(formData),
+          success: function (data) {
+            window.location.href = `/`;
+          },
+          error: function (xhr, status, error) {
+            // Given token not valid for any token type
+
+            try {
+              if (
+                xhr.responseJSON.detail ==
+                "Given token not valid for any token type"
+              ) {
+                window.location.href = `${location.protocol}//${location.host}/auth/logout/`;
+              }
+            } catch (error) {
+              console.log(error);
+            }
+
+            // Handle error response from the backend
+            // console.error("Error sending data:", error.erro12r);
+            // // Optionally, you can display an error message to the user
+
+            try {
+              if (xhr.responseJSON.non_field_errors[0]) {
+                alert(`Error: ${xhr.responseJSON.non_field_errors[0]}`);
+              }
+            } catch (error) {
+              if (
+                xhr.responseJSON.error23 ==
+                "UNIQUE constraint failed: users_vendor.shop_name"
+              )
+                alert(`Error: That Shop Name Already Used`);
+            }
+          },
+        });
+      });
+    </script>
+  </body>
+</html>

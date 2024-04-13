@@ -130,7 +130,7 @@ class ProductInventory(models.Model):
     )
 
     def __str__(self):
-        return self.sku
+        return f"{self.sku} -- {self.pk}"
 
 class Wishlist(models.Model):
     user = models.ForeignKey(Consumer, on_delete=models.CASCADE, related_name='wishlist')
@@ -236,6 +236,15 @@ class Order(models.Model):
         orderItems = self.orderitem_set.all()
         total = sum([item.quantity for item in orderItems])
         return total
+
+class SalesRecord(models.Model):
+    vendor = models.ForeignKey(Vendor, on_delete=models.CASCADE)
+    product = models.ForeignKey(ProductInventory, on_delete=models.CASCADE)
+    quantity_sold = models.PositiveIntegerField(default=0)
+    sale_datetime = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.product.product.name} - {self.quantity_sold} units sold on {self.sale_datetime}"
 
 class OrderItem(models.Model):
     product = models.ForeignKey(ProductInventory, on_delete=models.CASCADE, null=True, blank=True)

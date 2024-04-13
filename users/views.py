@@ -7,7 +7,7 @@ from .serializers import UserSerializer, VendorSerializer
 from rest_framework import generics, status, mixins
 from rest_framework.request import Request
 from rest_framework.response import Response
-from .models import Consumer
+from .models import Consumer, Vendor
 from rest_framework.views import APIView
 from .tokens import create_jwt_for_user
 
@@ -107,6 +107,30 @@ class SignUpView_vendor(generics.GenericAPIView):
                 response = {"message": "Vendor Created", "data": serializer.data}
 
                 return Response(data=response, status=status.HTTP_201_CREATED)
+            return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            context = {
+                "error23": str(e),
+            }
+
+            return Response(data=context, status=status.HTTP_400_BAD_REQUEST)
+
+from rest_framework import status
+from .serializers import VendorUpdateSerializer
+from .permissions import VendorUpdatePermission
+
+class VendorUpdateView(APIView):
+    permission_classes = [VendorUpdatePermission]
+    def put(self, request, email):
+        vendor = Vendor.objects.get(email=email)
+        serializer = VendorUpdateSerializer(vendor, data=request.data)
+        try:
+            if serializer.is_valid():
+                serializer.save()
+
+                response = {"message": "Vendor Update", "data": serializer.data}
+
+                return Response(data=response, status=status.HTTP_200_OK)
             return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             context = {
