@@ -26,7 +26,7 @@ SECRET_KEY = secret_key
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ["https://e-commerce-website-for-bitcamp.onrender.com", "localhost"]
+ALLOWED_HOSTS = ["e-commerce-website-for-bitcamp.onrender.com", "localhost"]
 
 # ესენი არის ქროსს საიტ სკრიპტინგისთვის, დაცვისთვის
 SECURE_BROWSER_XSS_FILTER = True
