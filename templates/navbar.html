@@ -223,20 +223,17 @@
                           >
                         </li>
                         <li>
-                          <span
+                          <a
                             class="dropdown-item"
-                            id="wishproducts"
-                            data-bs-toggle="modal"
-                            data-bs-target="#reco_products"
-                            style="cursor: pointer"
-                            ><i class="fa-solid fa-check"></i> Recommended</span
+                            href="{% url 'dashboard' vendor.email %}"
+                            ><i class="fa fa-user"></i> Dashboard</a
                           >
                         </li>
                         <li>
                           <a
                             class="dropdown-item"
-                            href="{% url 'dashboard' vendor.email %}"
-                            ><i class="fa fa-user"></i> Dashboard</a
+                            href="{% url 'all_chat_view' %}"
+                            ><i class="fa-solid fa-message"></i> Chat</a
                           >
                         </li>
                         <li>
@@ -267,6 +264,13 @@
                             class="dropdown-item"
                             href="{% url 'dashboard_consumer' %}"
                             ><i class="fa fa-user"></i> Profile</a
+                          >
+                        </li>
+                        <li>
+                          <a
+                            class="dropdown-item"
+                            href="{% url 'all_chat_view' %}"
+                            ><i class="fa-solid fa-message"></i> Chat</a
                           >
                         </li>
                         <li>
@@ -349,73 +353,6 @@
 
             <p class="no-products_inwish">
               You Don't Have Any Wished Products Yet.
-            </p>
-            <!---->
-            {% endif %}
-          </div>
-          <div class="modal-footer">
-            <button
-              type="button"
-              class="btn btn-secondary"
-              data-bs-dismiss="modal"
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- product recommendations -->
-    <div
-      class="modal fade"
-      id="reco_products"
-      tabindex="-1"
-      aria-labelledby="exampleModalLabel"
-      aria-hidden="true"
-    >
-      <div class="modal-dialog modal-dialog-scrollable">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h1 class="modal-title fs-5" id="exampleModalLabel">
-              Recommendations
-            </h1>
-            <button
-              type="button"
-              class="btn-close"
-              data-bs-dismiss="modal"
-              aria-label="Close"
-            ></button>
-          </div>
-          <div class="modal-body reco_products">
-            {% if recommendations %}
-            <!---->
-            {% for wish in recommendations %}
-            <div class="d-flex-sm mb-2">
-              <a
-                href="{% url 'product_detail' wish.product.unique_id %}"
-                class="result_a_tag"
-                style="display: flex; align-items: center"
-                ><img
-                  src="/static/images/{{wish.img_url}}"
-                  alt=""
-                  style="max-width: 70px"
-                />
-                <span
-                  class="result-span"
-                  style="display: flex; flex-direction: column"
-                >
-                  <span style="color: black"> {{wish.product.name}} </span>
-                  <span class="price" style="color: black">
-                    $ {{wish.retail_price}}
-                  </span>
-                </span>
-              </a>
-            </div>
-            {% endfor %} {% else %}
-
-            <p class="no-products_inwish">
-              You Don't Have Any Recommendations Yet.
             </p>
             <!---->
             {% endif %}

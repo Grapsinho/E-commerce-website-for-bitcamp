@@ -1,4 +1,25 @@
 $(document).ready(function () {
+  let chat_seen_bol = JSON.parse(
+    document.getElementById("chat_seen_bol_id").textContent
+  );
+  let chat_seen = JSON.parse(
+    document.getElementById("chat_seen_id").textContent
+  );
+
+  if (chat_seen_bol) {
+    $(".modal_for_seen").addClass("show");
+    $(".modal_seen").append(chat_seen);
+    document
+      .querySelector("#btn_remove_modal")
+      .addEventListener("click", () => {
+        $(".modal_for_seen").removeClass("show");
+      });
+
+    document.querySelector(".for_modal_close").addEventListener("click", () => {
+      $(".modal_for_seen").removeClass("show");
+    });
+  }
+
   function getCookie(name) {
     var cookieValue = null;
     if (document.cookie && document.cookie !== "") {

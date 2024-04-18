@@ -74,13 +74,8 @@ def dashboard(request, sku):
 
     product_sold_quantity = []
 
-    print(product_sales_records)
-
     for i in product_sales_records:
-        product_sold_quantity.append(i.quantity_sold)
-
-        print(i.product.sku)
-        
+        product_sold_quantity.append(i.quantity_sold) 
     
     context['product_sold_quantity'] = sum(product_sold_quantity)
     

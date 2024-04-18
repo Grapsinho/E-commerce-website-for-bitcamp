@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'inventory.apps.InventoryConfig',
     'mainApp.apps.MainappConfig',
     'dashboard.apps.DashboardConfig',
+    'chat.apps.ChatConfig',
 
     #api
     'rest_framework',

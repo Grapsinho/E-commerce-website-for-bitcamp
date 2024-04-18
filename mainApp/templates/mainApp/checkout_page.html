@@ -42,7 +42,9 @@
         <div class="modal-content">
           <div class="modal-body">Thanks For Buying</div>
           <div class="modal-footer">
-            <a href="{% url 'home' %}" class="btn btn-secondary"> Go Home </a>
+            <a href="{% url 'all_chat_view' %}" class="btn btn-secondary">
+              Go See Chats
+            </a>
           </div>
         </div>
       </div>
@@ -76,6 +78,82 @@
               {% endif %}
             </div>
           </div>
+
+          {% if shippingAdr %}
+          <div class="form-control">
+            <label for="checkout-phone">Phone</label>
+            <div>
+              <span class="fa fa-phone"></span>
+              <input
+                type="tel"
+                name="checkout-phone"
+                class="necessary_form"
+                id="checkout-phone"
+                value="{{shippingAdr.phone_number}}"
+                placeholder="Enter you phone..."
+              />
+            </div>
+          </div>
+          <br />
+          <h6>Shipping address</h6>
+          <div class="form-control">
+            <label for="checkout-name">Full name</label>
+            <div>
+              <span class="fa fa-user-circle"></span>
+              <input
+                type="text"
+                class="necessary_form"
+                id="checkout-name"
+                name="checkout-name"
+                value="{{shippingAdr.full_name}}"
+                placeholder="Enter you name..."
+              />
+            </div>
+          </div>
+          <div class="form-control">
+            <label for="checkout-address">Address</label>
+            <div>
+              <span class="fa fa-home"></span>
+              <input
+                type="text"
+                class="necessary_form"
+                name="checkout-address"
+                id="checkout-address"
+                value="{{shippingAdr.address}}"
+                placeholder="Your address..."
+              />
+            </div>
+          </div>
+          <div class="form-control">
+            <label for="checkout-city">City</label>
+            <div>
+              <span class="fa fa-building"></span>
+              <input
+                type="text"
+                class="necessary_form"
+                name="checkout-city"
+                id="checkout-city"
+                value="{{shippingAdr.city}}"
+                placeholder="Your city..."
+              />
+            </div>
+          </div>
+          <div class="form-control">
+            <label for="checkout-postal">Postal code</label>
+            <div>
+              <span class="fa fa-archive"></span>
+              <input
+                type="numeric"
+                class="necessary_form"
+                name="checkout-postal"
+                id="checkout-postal"
+                value="{{shippingAdr.Postal_code}}"
+                placeholder="Your postal code..."
+              />
+            </div>
+          </div>
+
+          {% else %}
           <div class="form-control">
             <label for="checkout-phone">Phone</label>
             <div>
@@ -143,6 +221,7 @@
               />
             </div>
           </div>
+          {% endif %}
           <div class="form-control-btn start_checkout_process_btn">
             <button>Checkout</button>
           </div>

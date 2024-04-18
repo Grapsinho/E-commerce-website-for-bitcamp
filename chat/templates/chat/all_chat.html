@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chat</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f2f2f2;
+        margin: 0;
+        padding: 20px;
+      }
+
+      .chat-container {
+        max-width: 600px;
+        margin: 0 auto;
+        background-color: #fff;
+        border-radius: 5px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+      }
+
+      .messages {
+        padding: 20px;
+        overflow-y: auto;
+        max-height: 300px;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .message {
+        padding: 10px;
+        margin-bottom: 10px;
+        border-radius: 5px;
+        max-width: 70%;
+        word-wrap: break-word;
+      }
+
+      .my-message {
+        background-color: #4caf50;
+        color: #fff;
+        align-self: flex-end;
+        font-size: 15px;
+        width: 100%;
+      }
+
+      .other-message {
+        background-color: #f2f2f2;
+        color: #333;
+        align-self: flex-start;
+        width: 200px;
+        font-size: 15px;
+      }
+
+      .input-box {
+        display: flex;
+        align-items: center;
+        padding: 10px;
+        background-color: #eee;
+      }
+
+      #message-input {
+        flex: 1;
+        padding: 8px;
+        border: none;
+        border-radius: 5px;
+        margin-right: 10px;
+      }
+
+      #send-btn {
+        padding: 8px 20px;
+        background-color: #4caf50;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>All Chats</h1>
+
+    <div>
+      <a href="{% url 'home' %}">Go Back</a>
+    </div>
+
+    <ul>
+      {% for chat in all_chats %}
+      <li>
+        {% if request.user == chat.receiver %}
+        <a href="{% url 'chat_view' chat.pk %}">Chat with {{ chat.sender }}</a>
+        {% else %}
+        <a href="{% url 'chat_view' chat.pk %}"
+          >Chat with {{ chat.receiver }}</a
+        >
+        {% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+  </body>
+</html>

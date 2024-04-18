@@ -12,8 +12,11 @@ from django.db.models import F
 import os
 from datetime import datetime, timedelta
 import re
+from chat.models import Chat, Message
 
-from .getReco import get_recommendations
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
 
 
 '''
@@ -26,21 +29,12 @@ DONE product delete&update
 DONE dashboard for consumers and for vendors
 DONE add to cart & remove from cart & update cart
 DONE checkout
-DONE recommendations
+DONE chat
 
-eseigi kargi iqneba ro stilebze daivwyo mushaoba ubralod arvici raunda vqna
+anu xval moxval cotas ifiqreb ras gaaketeb checkoutis magivrad tu araferi vikideb da egreve viwyeb ro dokerizeba
+gavuketo am proeqts
 
 '''
-
-"""
-    POST /api/users: User registration
-    POST /api/vendors: Vendor registration
-    GET /api/products: List products
-    POST /api/cart: Add item to cart
-    PUT /api/cart: Update cart
-    DELETE /api/cart: Remove item from cart
-    POST /api/checkout: Handle payment and checkout
-"""
 
 def sanitize_input(user_input):
     cleaned_input = bleach.clean(user_input, tags=['p', 'strong', 'em'], attributes={'*': ['class']})
@@ -54,8 +48,6 @@ def home(request):
             vendor = request.user
     except:
         vendor = request.user
-
-    recommendations = get_recommendations(vendor)
 
     if request.method == 'GET':
         # Retrieve all ProductInventory instances
@@ -75,7 +67,7 @@ def home(request):
         try:
             wishlist12 = Wishlist.objects.get(user=vendor)
 
-            wishlist_items = WishlistItem.objects.filter(wishlist=wishlist12)
+            wishlist_items = WishlistItem.objects.select_related('wishlist').filter(wishlist=wishlist12)
 
             len_wish = len(wishlist_items)
         except:
@@ -85,7 +77,7 @@ def home(request):
         q = request.GET.get('search') if request.GET.get('search') != None else ''
 
         if q == '':
-            product_inventories = ProductInventory.objects.all()
+            product_inventories = ProductInventory.objects.select_related('product').all()
         else:
             product_inventories = ProductInventory.objects.filter(product__name__icontains=sanitize_input(q))
 
@@ -108,7 +100,25 @@ def home(request):
                     # If it doesn't exist, create a new list with the value
                     attr_dict[attribute_value.attributevalues.attribute.name] = [attribute_value.attributevalues.value]
 
-    context = {'vendor': vendor, 'attrs': attr_dict.items(), 'product_inventories':product_inventories, 'categories': categories, 'q': q, 'len_wish': len_wish, "wishprods": wishlist_items, 'cart_data': cart_data, 'len_cart': len(cart_data), 'total_price': sum(total_price), 'recommendations': recommendations}
+    if request.user.is_authenticated:
+        all_chats = Chat.objects.filter(sender=vendor) | Chat.objects.filter(receiver=vendor)
+
+        chat_seen = 'You Have Unread Message In This Chat!' + " "
+        chat_seen_bol = False
+
+        for i in all_chats:
+
+            if i.sender_seen == False and i.sender == vendor:
+                chat_seen += i.receiver.email + " "
+                chat_seen_bol = True
+            elif i.receiver_seen == False and i.receiver.email == vendor.email:
+                chat_seen += i.sender.email + " "
+                chat_seen_bol = True
+    else:
+        chat_seen = 'You Have Unread Message In This Chat!' + " "
+        chat_seen_bol = False
+
+    context = {'vendor': vendor, 'attrs': attr_dict.items(), 'product_inventories':product_inventories, 'categories': categories, 'q': q, 'len_wish': len_wish, "wishprods": wishlist_items, 'cart_data': cart_data, 'len_cart': len(cart_data), 'total_price': sum(total_price), "chat_seen": chat_seen, 'chat_seen_bol': chat_seen_bol}
 
     return render(request, 'mainApp/home.html', context)
 
@@ -330,11 +340,13 @@ def checkout_page(request):
     consumer = 'None'
     if request.user.is_authenticated:
         consumer = Consumer.objects.get(email=request.user)
+        shippingAdr = ShippingAddress.objects.get(costumer=consumer)
 
     context = {
         'products': products2,
         'total_price': total_price,
-        'consumer': consumer
+        'consumer': consumer,
+        'shippingAdr': shippingAdr
     }
     return render(request, 'mainApp/checkout_page.html', context)
 
@@ -1362,11 +1374,8 @@ def processOrder(request):
         postalCode = request.POST.get('postalCode')
         address = request.POST.get('address')
         product_sku = request.POST.get('sku')
-            
-        # Assuming 'document.cookie' is represented as a string
-        document_cookie = request.COOKIES.get('cart_items', '')
 
-        costumer, created = Consumer.objects.get_or_create(email=email)
+        costumer, created = Consumer.objects.get_or_create(email=request.user)
 
         costumer.full_name = name
         costumer.save()
@@ -1376,124 +1385,87 @@ def processOrder(request):
             complete=False,
         )
 
-        updated_items = []
+        total_price = 0
 
-        if document_cookie:
-            total_price = 0
+        user_cart = Cart.objects.get(user=request.user)
 
-            cookieCart = json.loads(document_cookie)
+        user_cartItem = user_cart.items.filter(product__sku__in=json.loads(product_sku))
 
-            for rame in range(len(cookieCart)):
+        for item in user_cartItem:
+            product = ProductInventory.objects.get(sku=item.product.sku)
 
-                if cookieCart[rame]['sku'] != json.loads(product_sku)[rame]:
-                    # Append this item to the updated_items list
-                    updated_items.append({'sku': cookieCart[rame]['sku'], 'quantity': cookieCart[rame]['quantity']})
-                else:
-                    product = ProductInventory.objects.get(sku=cookieCart[rame]['sku'])
+            item.delete()
 
-                    orderItem = OrderItem.objects.create(
-                        order=order,
-                        product=product,
-                        quantity=int(cookieCart[rame]['quantity']),
-                    )
-
-                    price = product.retail_price * int(cookieCart[rame]['quantity'])
-                    total_price += price
-
-                    stock_item = int(product.stock)
-                    stock_item -= int(cookieCart[rame]['quantity'])
-                    product.stock = stock_item
-                    product.save()
-
-                    # Create a SalesRecord for the sold product
-                    salesrcrd = SalesRecord.objects.create(
-                        vendor=product.product.vendor,
-                        product=product,
-                        quantity_sold=int(cookieCart[rame]['quantity'])
-                    )
-
-            total321 = total_price + 5
-            total4321 = float(order.get_all_total) + 5
-
-            order.transaction_id = transaction_id
-
-            if float(total321) == total4321:
-                order.complete = True
-            order.save()
-            
-            ShippingAddress.objects.get_or_create(
-                costumer=costumer,
+            orderItem = OrderItem.objects.create(
                 order=order,
-                address=address,
-                city=city,
-                Postal_code=postalCode,
-                full_name=name,
-                phone_number=number,
-                email=email
+                product=product,
+                quantity=int(item.quantity),
             )
 
-            response = JsonResponse({'success': True, 'message': "Thanks For Buying!!"})
+            price = product.retail_price * int(item.quantity)
+            total_price += price
 
-            # Update the cart_items cookie with the modified array
-            if updated_items != []:
-                response.set_cookie('cart_items', json.dumps(updated_items), expires=168 * 3600)
-            else:
-                response.delete_cookie('cart_items')
+            stock_item = int(product.stock)
+            stock_item -= int(item.quantity)
+            product.save()
 
-            return response
-        else:
-            total_price = 0
-
-            user_cart = Cart.objects.get(user=request.user)
-
-            user_cartItem = user_cart.items.filter(product__sku__in=json.loads(product_sku))
-
-            for item in user_cartItem:
-                product = ProductInventory.objects.get(sku=item.product.sku)
-
-                item.delete()
-
-                orderItem = OrderItem.objects.create(
-                    order=order,
-                    product=product,
-                    quantity=int(item.quantity),
-                )
-
-                price = product.retail_price * int(item.quantity)
-                total_price += price
-
-                stock_item = int(product.stock)
-                stock_item -= int(item.quantity)
-                product.stock = stock_item
-                product.save()
-
-                # Create a SalesRecord for the sold product
-                salesrcrd = SalesRecord.objects.create(
-                    vendor=product.product.vendor,
-                    product=product,
-                    quantity_sold=int(item.quantity),
-                )
-            
-            total321 = total_price + 5
-            total4321 = float(order.get_all_total) + 5
-
-            order.transaction_id = transaction_id
-
-            if float(total321) == total4321:
-                order.complete = True
-            order.save()
-            
-            ShippingAddress.objects.get_or_create(
-                costumer=request.user,
-                order=order,
-                address=address,
-                city=city,
-                Postal_code=postalCode,
-                full_name=name,
-                phone_number=number,
-                email=email
+            # Create a SalesRecord for the sold product
+            salesrcrd = SalesRecord.objects.create(
+                vendor=product.product.vendor,
+                product=product,
+                quantity_sold=int(item.quantity),
             )
 
-            response = JsonResponse({'success': True, 'message': "Thanks For Buying!!"})
+            # Create chat conversation between consumer and vendor
+            curChat = Chat.objects.get_or_create(
+                sender=request.user,  # Consumer
+                receiver=product.product.vendor,  # Vendor
+            )
 
-            return response
+            Message.objects.create(
+                content=f"New order placed: {item.quantity} x {product.product.name}, SKU: {product.sku}",
+                chat=curChat[0],
+                sender=request.user,
+            )
+
+            # Send email notification to the vendor
+            vendor_email = product.product.vendor.email  # Assuming vendor has an email field
+            subject = 'New Order Placed'
+            message = render_to_string('mainApp/new_order_notification.html', {
+                'quantity': item.quantity,
+                'product_name': product.product.name,
+                'product_sku': product.sku,
+                'phone': number,
+                'address': address,
+                'full_name': name
+            })
+            plain_message = strip_tags(message)
+            send_mail(subject, plain_message, settings.EMAIL_HOST_USER, [vendor_email], html_message=message)
+
+            
+        total321 = total_price + 5
+        total4321 = float(order.get_all_total) + 5
+
+        order.transaction_id = transaction_id
+
+        if float(total321) == total4321:
+            order.complete = True
+        order.save()
+        
+        shipadr = ShippingAddress.objects.get_or_create(
+            costumer=request.user,
+        )
+
+        shipadr[0].order = order
+        shipadr[0].address = address
+        shipadr[0].city = city
+        shipadr[0].Postal_code = postalCode
+        shipadr[0].full_name = name
+        shipadr[0].phone_number = number
+        shipadr[0].email = email
+
+        shipadr[0].save()
+
+        response = JsonResponse({'success': True, 'message': "Thanks For Buying!!"})
+
+        return response

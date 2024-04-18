@@ -266,48 +266,52 @@ $(document).ready(function () {
   let isAnyChecked = false;
 
   checkout_process.addEventListener("click", () => {
-    if (save_CH.classList.contains("d-none")) {
-      let selectedProducts = [];
-      let totalPrice = document.querySelector(".totalPriceCart").innerText;
+    if (document.getElementById("wishproducts")) {
+      if (save_CH.classList.contains("d-none")) {
+        let selectedProducts = [];
+        let totalPrice = document.querySelector(".totalPriceCart").innerText;
 
-      // Iterate over each product in the cart
-      tr_for_cart.forEach((row, index) => {
-        const qnt = quantity_inp[index];
-        const prod_price = productPrice[index];
-        const which_buy = which_to_buy[index];
+        // Iterate over each product in the cart
+        tr_for_cart.forEach((row, index) => {
+          const qnt = quantity_inp[index];
+          const prod_price = productPrice[index];
+          const which_buy = which_to_buy[index];
 
-        if (which_buy.checked) {
-          // Add information about the selected product to the array
-          selectedProducts.push({
-            quantity: qnt.value,
-            productId: qnt.dataset.prodid,
-            price: prod_price.innerText,
-          });
-        }
-      });
-
-      if (selectedProducts.length > 0) {
-        // At least one product is selected, construct the URL with parameters
-        let url = "checkout_page?";
-        selectedProducts.forEach((product, index) => {
-          // Append product information to the URL
-          url += `product_quantity${index + 1}=${product.quantity}&`;
-          url += `product_id${index + 1}=${product.productId}&`;
-          url += `product_price${index + 1}=${product.price}&`;
+          if (which_buy.checked) {
+            // Add information about the selected product to the array
+            selectedProducts.push({
+              quantity: qnt.value,
+              productId: qnt.dataset.prodid,
+              price: prod_price.innerText,
+            });
+          }
         });
 
-        // Append total price to the URL
-        url += `total_price=${totalPrice}`;
+        if (selectedProducts.length > 0) {
+          // At least one product is selected, construct the URL with parameters
+          let url = "checkout_page?";
+          selectedProducts.forEach((product, index) => {
+            // Append product information to the URL
+            url += `product_quantity${index + 1}=${product.quantity}&`;
+            url += `product_id${index + 1}=${product.productId}&`;
+            url += `product_price${index + 1}=${product.price}&`;
+          });
 
-        // Redirect to the checkout page with the constructed URL
-        window.location.href = url;
+          // Append total price to the URL
+          url += `total_price=${totalPrice}`;
+
+          // Redirect to the checkout page with the constructed URL
+          window.location.href = url;
+        } else {
+          alert(
+            "Please select at least one product from the cart before proceeding with checkout."
+          );
+        }
       } else {
-        alert(
-          "Please select at least one product from the cart before proceeding with checkout."
-        );
+        alert("First Save Changes and then Proceed to checkout");
       }
     } else {
-      alert("First Save Changes and then Proceed to checkout");
+      alert("Please log in or register to continue shopping.");
     }
   });
 

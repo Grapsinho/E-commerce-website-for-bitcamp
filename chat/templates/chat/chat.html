@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chat</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f2f2f2;
+        margin: 0;
+        padding: 20px;
+      }
+
+      .chat-container {
+        max-width: 700px;
+        margin: 0 auto;
+        background-color: #fff;
+        border-bottom-left-radius: 5px;
+        border-bottom-right-radius: 5px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+      }
+
+      .up_chat {
+        height: 50px;
+        border-bottom-right-radius: 0px;
+        border-bottom-left-radius: 0px;
+        align-items: center;
+        text-decoration: none;
+        justify-content: space-around;
+      }
+
+      .messages {
+        padding: 20px;
+        overflow-y: auto;
+        max-height: 300px;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .message {
+        padding: 10px;
+        margin-bottom: 10px;
+        border-radius: 5px;
+        max-width: 70%;
+        word-wrap: break-word;
+      }
+
+      .my-message {
+        background-color: #4caf50;
+        color: #fff;
+        align-self: flex-end;
+        font-size: 15px;
+        width: 100%;
+      }
+
+      .other-message {
+        background-color: #f2f2f2;
+        color: #333;
+        align-self: flex-start;
+        width: 100%;
+        font-size: 15px;
+      }
+
+      .input-box {
+        display: flex;
+        align-items: center;
+        padding: 10px;
+        background-color: #eee;
+      }
+
+      #message-input {
+        flex: 1;
+        padding: 8px;
+        border: none;
+        border-radius: 5px;
+        margin-right: 10px;
+      }
+
+      #send-btn {
+        padding: 8px 20px;
+        background-color: #4caf50;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <input type="hidden" id="chat_pk" value="{{vendor_chats.pk}}" />
+    <input type="hidden" id="sender_id" value="{{request.user.pk}}" />
+
+    <div class="chat-container up_chat" style="display: flex">
+      <div>
+        <a href="{% url 'home' %}">Go Home</a>
+      </div>
+
+      <div>
+        {% if curr == vendor_chats.receiver %}
+        <p>Receiver: {{vendor_chats.sender}}</p>
+        {% else %}
+        <p>Receiver: {{vendor_chats.receiver}}</p>
+        {% endif %}
+      </div>
+    </div>
+    <div class="chat-container">
+      <div class="messages" id="messages-container">
+        {% for i in messages %}
+        <!--  -->
+        {% if curr == i.sender %}
+        <div class="message my-message">{{i.content}}</div>
+        {% else %}
+        <div class="message other-message">{{i.content}}</div>
+        {% endif %}
+
+        <!--  -->
+        {% endfor %}
+      </div>
+      <div class="input-box">
+        <input
+          type="text"
+          id="message-input"
+          placeholder="Type your message..."
+        />
+        <button id="send-btn">Send</button>
+      </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+      $(document).ready(function () {
+        function scrollToBottom() {
+          const chatContainer = document.getElementById("messages-container");
+          chatContainer.scrollTop =
+            chatContainer.scrollHeight - chatContainer.clientHeight;
+        }
+
+        window.onload = scrollToBottom;
+
+        function getCookie(name) {
+          var cookieValue = null;
+          if (document.cookie && document.cookie !== "") {
+            var cookies = document.cookie.split(";");
+            for (var i = 0; i < cookies.length; i++) {
+              var cookie = jQuery.trim(cookies[i]);
+              // Check if this cookie string begins with the name provided
+              if (cookie.substring(0, name.length + 1) === name + "=") {
+                cookieValue = decodeURIComponent(
+                  cookie.substring(name.length + 1)
+                );
+                break;
+              }
+            }
+          }
+          return cookieValue;
+        }
+        var csrftoken = getCookie("csrftoken");
+
+        let chat_pk = document.querySelector("#chat_pk").value;
+
+        // Function to send a message
+        $("#send-btn").click(function () {
+          var message = $("#message-input").val();
+          let sender_id = document.querySelector("#sender_id").value;
+
+          $("#message-input").val("");
+
+          sendMessage(message, sender_id, chat_pk);
+        });
+
+        // Create a WebSocket connection
+        let host = window.location.host;
+        const socket = new WebSocket(`ws://${host}/ws/chat/${chat_pk}/`);
+
+        // Event listener for when the WebSocket connection is opened
+        socket.onopen = function (event) {
+          console.log("WebSocket connection opened");
+        };
+
+        // Event listener for when a message is received from the WebSocket
+        socket.onmessage = function (event) {
+          let mes = JSON.parse(event.data);
+          if (mes.sender_id == document.querySelector("#sender_id").value) {
+            $("#messages-container").append(`
+              
+              <div class="message my-message">${mes.message}</div>
+    
+            `);
+          } else {
+            $("#messages-container").append(`
+              
+              <div class="message other-message">${mes.message}</div>
+    
+            `);
+          }
+        };
+
+        // Function to send a message via WebSocket
+        function sendMessage(messageContent, senderId, chatPk) {
+          const messageData = {
+            type: "send",
+            message: messageContent,
+            sender_id: senderId,
+            chat_pk: chatPk,
+          };
+
+          // Convert message data to JSON and send it via WebSocket
+          socket.send(JSON.stringify(messageData));
+        }
+      });
+    </script>
+  </body>
+</html>

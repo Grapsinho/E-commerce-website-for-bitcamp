@@ -97,6 +97,11 @@
     background: #3765aa !important;
     border-color: #3765aa !important;
   }
+
+  .modal_for_seen.show {
+    display: block;
+    backdrop-filter: brightness(0.5);
+  }
 </style>
 {% endblock css %} {% block page_title %} Home {% endblock page_title %}
 <!-- Page Content -->
@@ -106,19 +111,6 @@
 <section>
   <div class="container-fluid">
     <section class="section-products d-flex">
-      <!-- <h2>Recommendations for You</h2> -->
-      <!-- <div class="recommendations">
-        {% if recommendations %}
-        <ul>
-          {% for product in recommendations %}
-          <li>{{ product.product.name }}</li>
-          {% endfor %}
-        </ul>
-        {% else %}
-        <p>No recommendations available.</p>
-        {% endif %}
-      </div> -->
-
       <!-- this is for responsive -->
       <nav
         class="navbar bg-body-tertiary fixed-top filters-db"
@@ -456,8 +448,43 @@
   </div>
 </section>
 
-{{q|json_script:'search_q'}}
+<div
+  class="modal fade modal_for_seen"
+  id="exampleModal"
+  tabindex="-1"
+  aria-labelledby="exampleModalLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="exampleModalLabel">Unread Messages</h1>
+        <button
+          type="button"
+          class="btn-close for_modal_close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="modal-body modal_seen"></div>
+      <div class="modal-footer">
+        <button
+          type="button"
+          class="btn btn-secondary"
+          id="btn_remove_modal"
+          data-bs-dismiss="modal"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{{q|json_script:'search_q'}} {{chat_seen|json_script:'chat_seen_id'}}
+{{chat_seen_bol|json_script:'chat_seen_bol_id'}}
+
 <!--  -->
 {% block scripts %}
-<script src="{% static 'js/home2.js' %}"></script>
+<script src="{% static 'js/home5.js' %}"></script>
 {% endblock scripts %} {% endblock content %}

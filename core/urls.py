@@ -13,6 +13,9 @@ urlpatterns = [
     # dashboard urls
     path('', include('dashboard.urls')),
 
+    # chat urls
+    path('chat/', include('chat.urls')),
+
     # auth urls
     path('auth/', include('users.urls')),
 
