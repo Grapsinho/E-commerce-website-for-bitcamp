@@ -160,6 +160,7 @@ DATABASES = {
     }
 }
 
+external_redis = os.environ.get('EXTERNAL_LINK_REDIS')
 
 # ვიყენებთ რედის მესეჯ ბროკერად, მჭირდება იმიტომ რომ ვაპირებ ვებსოქეთის გამოყენებას
 # მესიჯ ბროკერი საშუალებას აძლევს ჩვენს აპებს და სერვისებს რომ იურთიერთონ ცვალონ ინფორმაცია
@@ -168,7 +169,7 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [("localhost", 6379)],
+            "hosts": [external_redis],
         },
     },
 }
