@@ -1,0 +1,19 @@
+[
+  {
+    "model": "users.consumer",
+    "fields": {
+      "id": 1,
+      "password": "rame1234",
+      "last_login": "2023-11-01 11:21:00",
+      "is_superuser": 1,
+      "username": "TestGmail@gmail.com",
+      "first_name": "",
+      "last_name": "",
+      "is_staff": 1,
+      "is_active": 1,
+      "date_joined": "2023-10-15 11:21:00",
+      "email": "TestGmail@gmail.com",
+      "full_name": ""
+    }
+  }
+]

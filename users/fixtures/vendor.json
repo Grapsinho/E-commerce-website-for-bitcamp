@@ -1,0 +1,22 @@
+[
+  {
+    "model": "users.vendor",
+    "fields": {
+      "consumer_ptr_id": 1,
+      "password": "rame1234",
+      "last_login": "2023-12-01 12:00:00",
+      "is_superuser": 1,
+      "username": "TestShop@gmail.com",
+      "first_name": "",
+      "last_name": "",
+      "is_staff": 1,
+      "is_active": 1,
+      "date_joined": "2023-10-15 11:18:00",
+      "email": "TestShop@gmail.com",
+      "full_name": "John Doe",
+      "shop_name": "Test Shop",
+      "description": "A vendor specializing in various products.",
+      "address": "Test Address"
+    }
+  }
+]
