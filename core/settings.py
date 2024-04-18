@@ -158,7 +158,7 @@ DATABASES = {
         'HOST': db_host,
         'PORT': db_port,
         'OPTIONS': {
-            'sslmode': 'allow',  # Change 'allow' to 'prefer' based on your needs
+            'sslmode': 'require',  # Change 'allow' to 'prefer' based on your needs
         },
     }
 }
