@@ -41,7 +41,7 @@ setuptools
 six
 sqlparse
 Twisted
-twisted-iocpsupport
+twisted-iocpsupport==1.0.4
 txaio
 typing_extensions
 tzdata
