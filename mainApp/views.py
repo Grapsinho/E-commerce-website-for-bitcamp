@@ -31,9 +31,6 @@ DONE add to cart & remove from cart & update cart
 DONE checkout
 DONE chat
 
-anu xval moxval cotas ifiqreb ras gaaketeb checkoutis magivrad tu araferi vikideb da egreve viwyeb ro dokerizeba
-gavuketo am proeqts
-
 '''
 
 def sanitize_input(user_input):
@@ -41,6 +38,9 @@ def sanitize_input(user_input):
     return cleaned_input
 
 def home(request):
+
+    attr_dict = {}
+    
     try:
         if request.user.is_vendor:
             vendor = Vendor.objects.get(email=request.user)
@@ -81,7 +81,6 @@ def home(request):
         else:
             product_inventories = ProductInventory.objects.filter(product__name__icontains=sanitize_input(q))
 
-        attr_dict = {}
         categories = Category.objects.all()
 
         # Loop through each ProductInventory instance
