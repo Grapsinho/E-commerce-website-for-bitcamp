@@ -41,6 +41,7 @@ def home(request):
 
     attr_dict = {}
     product_inventories = None
+    categories = None
     
     try:
         if request.user.is_vendor:
