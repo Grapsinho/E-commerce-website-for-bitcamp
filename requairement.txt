@@ -48,4 +48,3 @@ urllib3
 webencodings
 whitenoise
 zope.interface
-dj_database_url 
