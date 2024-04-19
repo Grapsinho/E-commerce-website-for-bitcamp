@@ -40,6 +40,7 @@ def sanitize_input(user_input):
 def home(request):
 
     attr_dict = {}
+    product_inventories = None
     
     try:
         if request.user.is_vendor:
