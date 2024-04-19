@@ -160,11 +160,16 @@ DATABASES = {
     }
 }
 
-import dj_database_url
+db_urlenv = os.environ.get('DB_URL')
 
-db_url = os.environ.get('DB_URL')
+from dj_database_url import parse as db_url
 
-DATABASES["default"] = dj_database_url.parse(db_url)
+DATABASES = {
+    'default': db_url(
+        db_urlenv,
+        ssl_require=True,  # Ensure SSL connection is required
+    )
+}
 
 external_redis = os.environ.get('EXTERNAL_LINK_REDIS')
 
