@@ -42,6 +42,11 @@ def home(request):
     attr_dict = {}
     product_inventories = None
     categories = None
+    q = None
+    len_wish = 0
+    wishlist_items = None
+    cart_data = 'None'
+    total_price = []
     
     try:
         if request.user.is_vendor:
@@ -101,11 +106,11 @@ def home(request):
                     # If it doesn't exist, create a new list with the value
                     attr_dict[attribute_value.attributevalues.attribute.name] = [attribute_value.attributevalues.value]
 
+    chat_seen = 'You Have Unread Message In This Chat!' + " "
+    chat_seen_bol = False
+    
     if request.user.is_authenticated:
         all_chats = Chat.objects.filter(sender=vendor) | Chat.objects.filter(receiver=vendor)
-
-        chat_seen = 'You Have Unread Message In This Chat!' + " "
-        chat_seen_bol = False
 
         for i in all_chats:
 
