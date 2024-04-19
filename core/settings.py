@@ -158,10 +158,11 @@ DATABASES = {
         'HOST': db_host,
         'PORT': db_port,
         'OPTIONS': {
-            'sslmode': 'require',  # SSL mode as per your needs
-            'max_conn_age': 600,  # Maximum age of a connection in seconds (10 minutes)
-            'connect_timeout': 10,  # Connection timeout in seconds
-        }
+            'sslmode': 'require',  # Ensure SSL connection
+            'pool_size': 5,  # Maximum number of connections to keep open
+            'max_overflow': 10,  # Allow up to 10 more connections on demand
+            'timeout': 30,  # How long to wait for a connection
+        },
     }
 }
 
