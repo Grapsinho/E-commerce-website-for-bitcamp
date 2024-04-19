@@ -157,14 +157,14 @@ DATABASES = {
         'PASSWORD': db_pass,
         'HOST': db_host,
         'PORT': db_port,
-        'OPTIONS': {
-            'sslmode': 'require',  # Ensure SSL connection
-            'pool_size': 5,  # Maximum number of connections to keep open
-            'max_overflow': 10,  # Allow up to 10 more connections on demand
-            'timeout': 30,  # How long to wait for a connection
-        },
     }
 }
+
+import dj_database_url
+
+db_url = os.environ.get('DB_URL')
+
+DATABASES["default"] = dj_database_url.parse(db_url)
 
 external_redis = os.environ.get('EXTERNAL_LINK_REDIS')
 
