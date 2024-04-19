@@ -158,7 +158,11 @@ DATABASES = {
         'HOST': db_host,
         'PORT': db_port,
         'OPTIONS': {
-            'sslmode': 'require',
+            'sslmode': 'require',  # SSL mode is set to require
+            'pool_class': 'pool.QueuePool',  # Use a pool class
+            'pool_size': 5,  # Maximum number of connections
+            'max_overflow': 10,  # Maximum number of connections to overflow if pool is full
+            'timeout': 30,  # Maximum time to wait for a connection before raising an exception
         },
     }
 }
