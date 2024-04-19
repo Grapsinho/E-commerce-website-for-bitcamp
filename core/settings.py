@@ -157,18 +157,10 @@ DATABASES = {
         'PASSWORD': db_pass,
         'HOST': db_host,
         'PORT': db_port,
+        'OPTIONS': {
+            'sslmode': 'require',  # Depending on your database setup, you may also use 'verify-ca' or 'verify-full'
+        }
     }
-}
-
-db_urlenv = os.environ.get('DB_URL')
-
-from dj_database_url import parse as db_url
-
-DATABASES = {
-    'default': db_url(
-        db_urlenv,
-        ssl_require=True,  # Ensure SSL connection is required
-    )
 }
 
 external_redis = os.environ.get('EXTERNAL_LINK_REDIS')
