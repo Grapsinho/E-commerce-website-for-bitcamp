@@ -48,3 +48,4 @@ urllib3
 webencodings
 whitenoise
 zope.interface
+django-db-connection-pool
