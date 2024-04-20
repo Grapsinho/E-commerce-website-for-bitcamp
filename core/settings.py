@@ -90,9 +90,6 @@ MIDDLEWARE = [
 
     #this is for origins that are allowed to send requests to the api
     'corsheaders.middleware.CorsMiddleware',
-
-    #debug-toolbar
-    "debug_toolbar.middleware.DebugToolbarMiddleware",
 ]
 
 # Allow all origins during development (for production, specify your allowed origins)
