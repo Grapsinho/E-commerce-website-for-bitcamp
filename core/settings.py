@@ -43,7 +43,7 @@ SECURE_HSTS_PRELOAD = True
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 
 CSRF_TRUSTED_ORIGINS = [
-    'ecommercewebsite-q6y0.onrender.com',
+    'https://ecommercewebsite-q6y0.onrender.com',
 ]
 
 # Application definition
