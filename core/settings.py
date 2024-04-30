@@ -42,6 +42,10 @@ SECURE_HSTS_SECONDS = 86400
 SECURE_HSTS_PRELOAD = True
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 
+CSRF_TRUSTED_ORIGINS = [
+    'ecommercewebsite-q6y0.onrender.com',
+]
+
 # Application definition
 
 INSTALLED_APPS = [
