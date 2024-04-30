@@ -5,7 +5,7 @@ function sanitizeInput(userInput) {
 }
 
 let host = window.location.host;
-let socket = new WebSocket(`ws://${host}/ws/live_search/`);
+let socket = new WebSocket(`wss://${host}/wss/live_search/`);
 let search_results = document.getElementById("search_results");
 
 search_results.style.display = "none";
