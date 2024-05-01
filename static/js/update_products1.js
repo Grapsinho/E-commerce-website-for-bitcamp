@@ -254,7 +254,7 @@ $(".create_product_btn")
           formData.append("image", "same");
         }
 
-        console.log(formData.get(`image-${id}`);
+        console.log(formData.get(`image-${id}`));
 
         sub_prod_obj = {
           [`product_id_${id}`]: {
