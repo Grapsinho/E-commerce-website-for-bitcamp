@@ -141,7 +141,7 @@ class Wishlist(models.Model):
 
 class WishlistItem(models.Model):
     wishlist = models.ForeignKey(Wishlist, related_name='wishlistss', on_delete=models.CASCADE)
-    product = models.ForeignKey('ProductInventory', related_name='wishlists_newss', on_delete=models.PROTECT)
+    product = models.ForeignKey('ProductInventory', related_name='wishlists_newss', on_delete=models.CASCADE)
     added_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
