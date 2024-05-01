@@ -346,7 +346,10 @@ def checkout_page(request):
     consumer = 'None'
     if request.user.is_authenticated:
         consumer = Consumer.objects.get(email=request.user)
-        shippingAdr = ShippingAddress.objects.get(costumer=consumer)
+        try:
+            shippingAdr = ShippingAddress.objects.get(costumer=consumer)
+        except:
+            shippingAdr = None
 
     context = {
         'products': products2,
