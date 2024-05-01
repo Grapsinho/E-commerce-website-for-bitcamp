@@ -254,6 +254,8 @@ $(".create_product_btn")
           formData.append("image", "same");
         }
 
+        console.log(formData.get(`image-${id}`);
+
         sub_prod_obj = {
           [`product_id_${id}`]: {
             "product_sku": sanitizeInput(product_sku[id].value),
