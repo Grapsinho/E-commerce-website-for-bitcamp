@@ -974,7 +974,7 @@ def update_product_ajax(request):
         # updating product
         if int(lent) == 1 and fine1:
                 main_product = ProductInventory.objects.get(product__unique_id=unique_id_prod)
-                if request.FILES.get('image'):
+                if request.FILES.get('image-0'):
                     # Retrieve the path of the photo associated with the sub-product
                     photo_path = main_product.img_url.url
 
