@@ -172,7 +172,7 @@
 
         // Create a WebSocket connection
         let host = window.location.host;
-        const socket = new WebSocket(`wss://${host}/ws/chat/${chat_pk}/`);
+        const socket = new WebSocket(`wss://${host}/wss/chat/${chat_pk}/`);
 
         // Event listener for when the WebSocket connection is opened
         socket.onopen = function (event) {
