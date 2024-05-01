@@ -982,7 +982,7 @@ def update_product_ajax(request):
                     if os.path.exists(f'static{photo_path}'):
                         os.remove(f'static{photo_path}')
 
-                    image_file = request.FILES.get('image')
+                    image_file = request.FILES.get('image-0')
                     # Rename image file if necessary
                     image_file.name = sub_product_data[0]['product_id_0']['product_sku'] + image_file.name
                     main_product.img_url = image_file
